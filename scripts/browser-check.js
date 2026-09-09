@@ -29,6 +29,16 @@ try {
       const leftControl=await page.locator('[data-input="left"]').boundingBox();
       assert.ok(portraitTip.y+portraitTip.height<leftControl.y,'top UI must stay above touch controls');
       assert.ok((await page.locator('.playing .toolbar').boundingBox()).height<130,'portrait toolbar must stay compact');
+      const selectionGuard=await page.evaluate(()=>{
+        const tip=document.querySelector('.play-top-ui .portrait'),viewport=document.querySelector('.playing .viewport'),style=getComputedStyle(tip);
+        const contextAllowed=viewport.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}));
+        const selectAllowed=viewport.dispatchEvent(new Event('selectstart',{bubbles:true,cancelable:true}));
+        return {userSelect:style.userSelect,webkitUserSelect:style.webkitUserSelect,contextAllowed,selectAllowed};
+      });
+      assert.equal(selectionGuard.userSelect,'none');
+      assert.equal(selectionGuard.webkitUserSelect,'none');
+      assert.equal(selectionGuard.contextAllowed,false,'play viewport context menu must be blocked');
+      assert.equal(selectionGuard.selectAllowed,false,'play viewport text selection must be blocked');
     }
     await page.keyboard.down('KeyD');await page.keyboard.press('Space');await page.waitForTimeout(150);await page.keyboard.up('KeyD');
     const session=await context.newCDPSession(page);
