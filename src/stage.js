@@ -1,4 +1,7 @@
 export const TILE = 48;
+export const BACKGROUND_IDS = ['tropicalSea', 'sunsetCoast', 'classic'];
+export const DEFAULT_BACKGROUND = 'tropicalSea';
+
 export const PARTS = {
   ground: ['▰', '地面', '#4a8978'],
   block: ['▣', 'ブロック', '#eda85c'],
@@ -25,7 +28,21 @@ export const PARTS = {
   start: ['⚑', 'スタート', '#77cfbf'],
   goal: ['⚐', 'ゴール', '#f4d67a']
 };
+
+export const PART_DEFAULTS = {
+  movingPlatform: { axis: 'x', distance: 2, speed: 1.25 },
+  cannon: { direction: 'right', interval: 1.65 },
+  timerSwitch: { duration: 3.2 },
+  warp: { target: '' }
+};
+
 export const clone = value => structuredClone(value);
+export const defaultPropsFor = type => clone(PART_DEFAULTS[type] ?? {});
+
+function newObject(type, x, y) {
+  const props = defaultPropsFor(type);
+  return Object.keys(props).length ? { type, x, y, props } : { type, x, y };
+}
 
 export function createStage() {
   return {
@@ -33,17 +50,51 @@ export function createStage() {
     name: '名前のない冒険',
     width: 80,
     height: 14,
+    background: DEFAULT_BACKGROUND,
     playerStart: { x: 2, y: 11 },
     objects: Array.from({ length: 80 }, (_, x) => ({ type: 'ground', x, y: 12 }))
       .concat({ type: 'goal', x: 24, y: 11 })
   };
 }
 
+function validateProps(o) {
+  if (o.props === undefined) return;
+  if (!o.props || typeof o.props !== 'object' || Array.isArray(o.props)) {
+    throw new Error('パーツ設定が正しくありません');
+  }
+  const finite = v => typeof v === 'number' && Number.isFinite(v);
+  if (o.type === 'movingPlatform') {
+    const axis = o.props.axis ?? 'x';
+    const distance = o.props.distance ?? 2;
+    const speed = o.props.speed ?? 1.25;
+    if (!['x', 'y'].includes(axis) || !finite(distance) || distance < .5 || distance > 12 ||
+        !finite(speed) || speed < .2 || speed > 4) throw new Error('動く足場の設定が正しくありません');
+  }
+  if (o.type === 'cannon') {
+    const direction = o.props.direction ?? 'right';
+    const interval = o.props.interval ?? 1.65;
+    if (!['left', 'right'].includes(direction) || !finite(interval) || interval < .3 || interval > 8) {
+      throw new Error('大砲の設定が正しくありません');
+    }
+  }
+  if (o.type === 'timerSwitch') {
+    const duration = o.props.duration ?? 3.2;
+    if (!finite(duration) || duration < .5 || duration > 15) throw new Error('時間スイッチの設定が正しくありません');
+  }
+  if (o.type === 'warp') {
+    const target = o.props.target ?? '';
+    if (typeof target !== 'string' || target.length > 20 || (target && !/^\d+,\d+$/.test(target))) {
+      throw new Error('ワープの設定が正しくありません');
+    }
+  }
+}
+
 export function validateStage(s) {
   if (!s || s.version !== 1 || typeof s.name !== 'string' || s.name.length > 60 ||
       !Number.isInteger(s.width) || s.width < 10 || s.width > 300 ||
       !Number.isInteger(s.height) || s.height < 8 || s.height > 40 ||
-      !Array.isArray(s.objects) || s.objects.length > s.width * s.height) {
+      !Array.isArray(s.objects) || s.objects.length > s.width * s.height ||
+      (s.background !== undefined && !BACKGROUND_IDS.includes(s.background))) {
     throw new Error('ステージ形式が正しくありません');
   }
   const inside = p => p && Number.isInteger(p.x) && Number.isInteger(p.y) &&
@@ -56,6 +107,7 @@ export function validateStage(s) {
     if (!inside(o) || !PARTS[o.type] || o.type === 'start' || occupied.has(key)) {
       throw new Error('パーツ配置が正しくありません');
     }
+    validateProps(o);
     occupied.add(key);
   }
   return s;
@@ -89,7 +141,7 @@ function applyPlace(s, type, x, y) {
 
   if (at?.type === type) return false;
   if (at) s.objects.splice(atIndex, 1);
-  s.objects.push({ type, x, y });
+  s.objects.push(newObject(type, x, y));
   return true;
 }
 
