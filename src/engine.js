@@ -11,6 +11,11 @@ export class GameEngine {
     this.checkpoint = null;
     this.time = 0;
     this.jumpSerial = 0;
+    this.coinSerial = 0;
+    this.landingSerial = 0;
+    this.stompSerial = 0;
+    this.goalSerial = 0;
+    this.hasGroundContact = false;
     this.reset();
   }
 
@@ -462,8 +467,13 @@ export class GameEngine {
       this.jumpCuttable = false;
     }
 
+    const groundedBeforeMove = p.grounded;
     const movement = this.move(p, dt, true);
     this.landOnMovingPlatform(movement.bottomBefore);
+    if (p.grounded) {
+      if (this.hasGroundContact && !groundedBeforeMove) this.landingSerial++;
+      this.hasGroundContact = true;
+    }
     if (p.vy >= 0) this.jumpCuttable = false;
 
     for (let i = this.enemies.length - 1; i >= 0; i--) {
@@ -480,6 +490,7 @@ export class GameEngine {
         p.y = e.y - p.h;
         p.vy = -420;
         p.grounded = false;
+        this.stompSerial++;
         this.updateEnemyDoors();
       } else {
         return this.die();
@@ -519,7 +530,10 @@ export class GameEngine {
       if (!overlaps(p, b)) continue;
 
       if (o.type === 'spike') return this.die();
-      if (o.type === 'coin') this.coins.add(key);
+      if (o.type === 'coin' && !this.coins.has(key)) {
+        this.coins.add(key);
+        this.coinSerial++;
+      }
 
       if (o.type === 'key' && !this.collectedKeys.has(key)) {
         this.collectedKeys.add(key);
@@ -538,7 +552,10 @@ export class GameEngine {
         if (!this.touchingSwitches.has(key)) this.activateTimer(prop(o, 'duration', 3.2));
       }
 
-      if (o.type === 'goal') this.clear = true;
+      if (o.type === 'goal' && !this.clear) {
+        this.clear = true;
+        this.goalSerial++;
+      }
     }
 
     this.touchingSwitches = switchesNow;
