@@ -23,7 +23,8 @@ export const PARTS = {
   timerBlock: ['▨', '時間ブロック', '#dfb074'],
   coin: ['●', 'コイン', '#ffd572'],
   spike: ['▲', 'トゲ', '#e98283'],
-  enemy: ['◆', '敵', '#b798d6'],
+  enemy: ['◆', '小型肉食恐竜', '#c98a63'],
+  flyingEnemy: ['⌁', 'プテラノドン', '#8aa6b8'],
   checkpoint: ['✦', 'チェック', '#6fb8d7'],
   start: ['⚑', 'スタート', '#77cfbf'],
   goal: ['⚐', 'ゴール', '#f4d67a']
