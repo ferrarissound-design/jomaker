@@ -37,6 +37,15 @@ try {
     await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[t1]});
     await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[t1,t2]});
     assert.equal(await page.locator('.pressed').count(),2);
+    await session.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});
+    assert.equal(await page.locator('.pressed').count(),0);
+    const beforeRelease=await page.evaluate(()=>document.querySelector('[data-input="right"]').classList.contains('pressed'));
+    assert.equal(beforeRelease,false);
+    await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[t1]});
+    assert.equal(await page.locator('.pressed').count(),1);
+    await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{...t1,x:4,y:4}]});
+    await page.waitForTimeout(30);
+    assert.equal(await page.locator('.pressed').count(),0,'sliding off a control must release it');
     await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     assert.equal(await page.locator('.pressed').count(),0);
     await page.screenshot({path:`artifacts/${name}-play.png`});await page.locator('#edit').click();assert.equal(await page.locator('#name').inputValue(),`Test ${name}`);
