@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createStage, StageEditor, StageStore, validateStage } from '../src/stage.js';
 import { GameEngine } from '../src/engine.js';
+import { encodeStage, decodeStage } from '../src/share.js';
 const idle={left:false,right:false,jump:false,jumpHeld:false};
 const advance=(g,n,input=idle)=>{for(let i=0;i<n;i++)g.step(1/120,input);};
 test('placement, unique goal, erase, undo and redo',()=>{const e=new StageEditor(createStage());e.place('enemy',8,11);assert.equal(e.stage.objects.at(-1).type,'enemy');e.place('spike',8,11);assert.equal(e.stage.objects.filter(o=>o.x===8&&o.y===11).length,1);e.undo();assert.equal(e.stage.objects.at(-1).type,'enemy');e.redo();e.place('erase',8,11);assert.ok(!e.stage.objects.some(o=>o.x===8&&o.y===11));e.place('goal',30,11);assert.equal(e.stage.objects.filter(o=>o.type==='goal').length,1);e.place('block',-1,0);validateStage(e.stage);});
@@ -18,3 +19,15 @@ test('drag stroke is grouped into one undo operation',()=>{const e=new StageEdit
 test('short jump cuts upward speed while held jump stays tall',()=>{const held=new GameEngine(createStage()),cut=new GameEngine(createStage());advance(held,60);advance(cut,60);held.step(1/120,{...idle,jump:true,jumpHeld:true});cut.step(1/120,{...idle,jump:true,jumpHeld:true});held.step(1/120,{...idle,jumpHeld:true});cut.step(1/120,idle);assert.ok(cut.player.vy>held.player.vy+200);});
 
 test('spring launches player and checkpoint becomes respawn point',()=>{const s=createStage();s.objects.push({type:'spring',x:3,y:11},{type:'checkpoint',x:5,y:11});const g=new GameEngine(s);advance(g,60);g.player.x=3*48+10;g.step(1/120,idle);assert.ok(g.player.vy<-700);g.player.x=5*48+10;g.player.y=11*48+8;g.player.vy=0;g.step(1/120,idle);assert.deepEqual(g.checkpoint,{x:5,y:11});g.player.y=1000;g.step(1/120,idle);assert.equal(g.deaths,1);assert.equal(g.player.x,5*48+10);});
+
+test('moving platforms animate and can carry the player',()=>{const s=createStage();s.playerStart={x:2,y:8};s.objects=s.objects.filter(o=>!(o.x===2&&o.y===12));s.objects.push({type:'movingPlatform',x:2,y:10});const g=new GameEngine(s);advance(g,80);assert.equal(g.player.platformKey,'2,10');const before=g.player.x;advance(g,30);assert.notEqual(g.movingPlatforms[0].x,g.movingPlatforms[0].baseX);assert.notEqual(g.player.x,before);});
+
+test('keys open doors and are consumed',()=>{const s=createStage();s.objects.push({type:'key',x:3,y:11},{type:'door',x:4,y:11});const g=new GameEngine(s);advance(g,90,{...idle,right:true});assert.ok(g.collectedKeys.has('3,11'));assert.ok(g.openedDoors.has('4,11'));assert.equal(g.keys,0);assert.ok(g.player.x>4*48);});
+
+test('breakable blocks shatter from a head bump',()=>{const s=createStage();s.objects.push({type:'breakable',x:2,y:9});const g=new GameEngine(s);advance(g,60);g.step(1/120,{...idle,jump:true,jumpHeld:true});advance(g,40,{...idle,jumpHeld:true});assert.ok(g.brokenBlocks.has('2,9'));assert.equal(g.solids.has('2,9'),false);});
+
+test('switches toggle switch blocks out of the path',()=>{const s=createStage();s.objects.push({type:'switch',x:3,y:11},{type:'switchBlock',x:5,y:11});const g=new GameEngine(s);advance(g,120,{...idle,right:true});assert.equal(g.switchOn,true);assert.equal(g.solids.has('5,11'),false);assert.ok(g.player.x>5*48);});
+
+test('paired warps move the player forward with a cooldown',()=>{const s=createStage();s.objects.push({type:'warp',x:3,y:11},{type:'warp',x:8,y:11});const g=new GameEngine(s);advance(g,35,{...idle,right:true});assert.ok(g.player.x>=8*48);assert.ok(g.warpCooldown>0);});
+
+test('stage share codes round-trip unicode stage data',()=>{const s=createStage();s.name='カギと扉の冒険🔑';s.objects.push({type:'key',x:4,y:11},{type:'door',x:5,y:11},{type:'warp',x:9,y:11});const code=encodeStage(s);assert.match(code,/^JO1\./);assert.deepEqual(decodeStage(code),s);assert.throws(()=>decodeStage('nope'),/共有コード/);});
