@@ -4,3 +4,8 @@
 
 .modal textarea.share-code{width:100%;min-height:130px;resize:vertical;border:1px solid #ccd9d2;border-radius:14px;background:#f5f7f2;color:#29484d;padding:12px;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0 0 18px;text-align:left}
 .share-modal{width:min(92vw,560px)}
+
+.settings-modal{width:min(92vw,520px);text-align:left}.settings-modal h2{text-align:center}.settings-modal>p{text-align:center}
+.settings-form{display:grid;gap:12px;margin:14px 0 22px}.field{display:grid;gap:6px;font-size:12px;font-weight:800;color:#607b77}
+.field input,.field select,.settings-modal select{width:100%;min-height:48px;border:1px solid #cad8d1;border-radius:12px;background:#f5f7f2;color:#29484d;padding:10px 12px;font:inherit}
+.settings-modal>.field{margin:16px 0}
