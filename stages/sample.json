@@ -381,7 +381,12 @@
     {
       "type": "movingPlatform",
       "x": 16,
-      "y": 10
+      "y": 10,
+      "props": {
+        "axis": "x",
+        "distance": 3,
+        "speed": 0.9
+      }
     },
     {
       "type": "coin",
@@ -411,12 +416,18 @@
     {
       "type": "warp",
       "x": 31,
-      "y": 11
+      "y": 11,
+      "props": {
+        "target": "38,11"
+      }
     },
     {
       "type": "warp",
       "x": 38,
-      "y": 11
+      "y": 11,
+      "props": {
+        "target": "31,11"
+      }
     },
     {
       "type": "checkpoint",
@@ -621,7 +632,11 @@
     {
       "type": "cannon",
       "x": 79,
-      "y": 11
+      "y": 11,
+      "props": {
+        "direction": "right",
+        "interval": 0.9
+      }
     },
     {
       "type": "breakable",
@@ -691,7 +706,10 @@
     {
       "type": "timerSwitch",
       "x": 94,
-      "y": 11
+      "y": 11,
+      "props": {
+        "duration": 4.5
+      }
     },
     {
       "type": "timerBlock",
@@ -708,5 +726,6 @@
       "x": 100,
       "y": 11
     }
-  ]
+  ],
+  "background": "tropicalSea"
 }

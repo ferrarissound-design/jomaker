@@ -1,6 +1,7 @@
 import { TILE, PARTS } from './stage.js';
+import { drawBackground } from './backgrounds.js';
 
-export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false) {
+export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false, props = null) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(size / TILE, size / TILE);
@@ -36,7 +37,7 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false)
     if (type === 'movingPlatform') {
       ctx.fillStyle = '#315f69';
       ctx.font = 'bold 13px sans-serif';
-      ctx.fillText('↔', 17, 29);
+      ctx.fillText(props?.axis === 'y' ? '↕' : '↔', 17, 29);
     }
   }
 
@@ -56,11 +57,12 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false)
   }
 
   if (type === 'cannon') {
+    const left = props?.direction === 'left';
     ctx.fillStyle = '#596a72';
-    ctx.beginPath(); ctx.arc(21, 28, 15, 0, Math.PI * 2); ctx.fill();
-    ctx.fillRect(21, 20, 25, 14);
+    ctx.beginPath(); ctx.arc(left ? 27 : 21, 28, 15, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(left ? 2 : 21, 20, 25, 14);
     ctx.fillStyle = '#263942';
-    ctx.beginPath(); ctx.arc(20, 28, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(left ? 28 : 20, 28, 7, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#8a9aa0';
     ctx.fillRect(10, 41, 25, 5);
   }
@@ -108,7 +110,8 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false)
     ctx.fillStyle = '#fff7df';
     ctx.beginPath(); ctx.arc(24, active ? 30 : 23, 10, 0, Math.PI * 2); ctx.fill();
     if (type === 'timerSwitch') {
-      ctx.fillStyle = '#6f5330'; ctx.font = 'bold 12px sans-serif'; ctx.fillText('3s', 17, 18);
+      ctx.fillStyle = '#6f5330'; ctx.font = 'bold 11px sans-serif';
+      ctx.fillText(`${Number(props?.duration ?? 3.2).toFixed(1)}s`, 10, 18);
     }
   }
 
@@ -166,12 +169,14 @@ export function drawPlayer(ctx, p, time) {
 
 export function render(ctx, w, h, stage, camera, scale, editing, game, time, selected, cameraY = 0) {
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#e8f2ed'; ctx.fillRect(0, 0, w, h);
-
-  ctx.fillStyle = '#d6e6df';
-  for (let i = -1; i < 8; i++) {
-    const x = i * 230 - (camera * .18) % 230;
-    ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + 140, h * .24); ctx.lineTo(x + 290, h); ctx.fill();
+  const themed = drawBackground(ctx, w, h, stage.background ?? 'tropicalSea', camera);
+  if (!themed) {
+    ctx.fillStyle = '#e8f2ed'; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#d6e6df';
+    for (let i = -1; i < 8; i++) {
+      const x = i * 230 - (camera * .18) % 230;
+      ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x + 140, h * .24); ctx.lineTo(x + 290, h); ctx.fill();
+    }
   }
 
   ctx.save();
@@ -207,7 +212,7 @@ export function render(ctx, w, h, stage, camera, scale, editing, game, time, sel
       (o.type === 'switch' && game?.switchOn) ||
       (o.type === 'timerSwitch' && game?.timerGate > 0) ||
       (o.type === 'plate' && game?.pressureActive);
-    drawPart(ctx, o.type, o.x * TILE, o.y * TILE, TILE, time, active);
+    drawPart(ctx, o.type, o.x * TILE, o.y * TILE, TILE, time, active, o.props);
   }
 
   if (editing) {
@@ -221,7 +226,7 @@ export function render(ctx, w, h, stage, camera, scale, editing, game, time, sel
   if (game) {
     for (const platform of game.movingPlatforms) {
       if (platform.x > camera - TILE && platform.x < camera + w / scale + TILE) {
-        drawPart(ctx, 'movingPlatform', platform.x, platform.y, TILE, time);
+        drawPart(ctx, 'movingPlatform', platform.x, platform.y, TILE, time, false, platform.props);
       }
     }
     for (const crate of game.crates) {

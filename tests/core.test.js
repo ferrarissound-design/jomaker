@@ -43,3 +43,13 @@ test('cannon shots break blocks and can remotely toggle switches',()=>{const bre
 test('cannon shots can shove crates into puzzle positions',()=>{const s=createStage();s.playerStart={x:0,y:11};s.objects.push({type:'cannon',x:2,y:11},{type:'crate',x:5,y:11});const g=new GameEngine(s);const before=g.crates[0].x;advance(g,120);assert.ok(g.crates[0].x>before);});
 
 test('timer switches open timed blocks and they close again',()=>{const s=createStage();s.objects.push({type:'timerSwitch',x:3,y:11},{type:'timerBlock',x:6,y:11});const g=new GameEngine(s);g.player.x=3*48+10;g.player.y=11*48+8;g.step(1/120,idle);assert.ok(g.timerGate>3);assert.equal(g.solids.has('6,11'),false);g.player.x=2*48+10;advance(g,400);assert.equal(g.timerGate,0);assert.equal(g.solids.has('6,11'),true);});
+
+test('new stages use tropical background while legacy stages remain valid',()=>{const fresh=createStage();assert.equal(fresh.background,'tropicalSea');const legacy=structuredClone(fresh);delete legacy.background;assert.doesNotThrow(()=>validateStage(legacy));});
+
+test('configurable parts receive defaults and reject invalid props',()=>{const e=new StageEditor(createStage());e.place('cannon',30,11);const cannon=e.stage.objects.find(o=>o.type==='cannon');assert.equal(cannon.props.direction,'right');assert.equal(cannon.props.interval,1.65);const bad=structuredClone(e.stage);bad.objects.find(o=>o.type==='cannon').props.interval=.1;assert.throws(()=>validateStage(bad),/大砲/);});
+
+test('moving platform settings control axis distance and speed',()=>{const s=createStage();s.objects.push({type:'movingPlatform',x:5,y:7,props:{axis:'y',distance:3,speed:2}});const g=new GameEngine(s);const p=g.movingPlatforms.at(-1);const x=p.x,y=p.y;advance(g,30);assert.equal(p.x,x);assert.notEqual(p.y,y);assert.equal(p.distance,3);assert.equal(p.speed,2);});
+
+test('cannon settings control direction and firing interval',()=>{const s=createStage();s.playerStart={x:20,y:11};s.objects.push({type:'cannon',x:10,y:11,props:{direction:'left',interval:.5}});const g=new GameEngine(s);advance(g,50);assert.ok(g.projectiles.some(shot=>shot.vx<0));assert.equal(g.cannons.at(-1).interval,.5);});
+
+test('custom timer duration and explicit warp targets are respected',()=>{const s=createStage();s.objects.push({type:'timerSwitch',x:3,y:11,props:{duration:6}},{type:'warp',x:5,y:11,props:{target:'12,11'}},{type:'warp',x:8,y:11},{type:'warp',x:12,y:11});const g=new GameEngine(s);g.player.x=3*48+10;g.player.y=11*48+8;g.step(1/120,idle);assert.ok(g.timerGate>5.9);g.player.x=5*48+10;g.player.y=11*48+8;g.warpCooldown=0;g.step(1/120,idle);assert.ok(g.player.x>=12*48);});

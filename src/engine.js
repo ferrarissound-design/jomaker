@@ -2,6 +2,7 @@ import { TILE, clone, validateStage } from './stage.js';
 
 const overlaps = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 const objectKey = o => `${o.x},${o.y}`;
+const prop = (o, name, fallback) => o?.props?.[name] ?? fallback;
 
 export class GameEngine {
   constructor(stage) {
@@ -41,9 +42,15 @@ export class GameEngine {
       .map(o => ({
         key: objectKey(o),
         baseX: o.x * TILE,
+        baseY: o.y * TILE,
         x: o.x * TILE,
-        prevX: o.x * TILE,
         y: o.y * TILE,
+        prevX: o.x * TILE,
+        prevY: o.y * TILE,
+        axis: prop(o, 'axis', 'x'),
+        distance: prop(o, 'distance', 2),
+        speed: prop(o, 'speed', 1.25),
+        props: o.props,
         w: TILE,
         h: 12
       }));
@@ -68,6 +75,8 @@ export class GameEngine {
         key: objectKey(o),
         x: o.x * TILE,
         y: o.y * TILE,
+        direction: prop(o, 'direction', 'right'),
+        interval: prop(o, 'interval', 1.65),
         timer: .35 + index * .12
       }));
 
@@ -303,11 +312,15 @@ export class GameEngine {
     this.time += dt;
     for (const platform of this.movingPlatforms) {
       platform.prevX = platform.x;
-      const range = TILE * 2;
-      platform.x = Math.max(0, Math.min(
-        this.stage.width * TILE - platform.w,
-        platform.baseX + Math.sin(this.time * 1.25) * range
-      ));
+      platform.prevY = platform.y;
+      const offset = Math.sin(this.time * platform.speed) * TILE * platform.distance;
+      if (platform.axis === 'y') {
+        platform.x = platform.baseX;
+        platform.y = Math.max(0, Math.min(this.stage.height * TILE - platform.h, platform.baseY + offset));
+      } else {
+        platform.y = platform.baseY;
+        platform.x = Math.max(0, Math.min(this.stage.width * TILE - platform.w, platform.baseX + offset));
+      }
     }
   }
 
@@ -317,6 +330,7 @@ export class GameEngine {
     const platform = this.movingPlatforms.find(p => p.key === key);
     if (!platform) return;
     this.player.x += platform.x - platform.prevX;
+    this.player.y += platform.y - platform.prevY;
     this.player.x = Math.max(0, Math.min(this.stage.width * TILE - this.player.w, this.player.x));
   }
 
@@ -339,7 +353,9 @@ export class GameEngine {
     if (this.warps.length < 2 || this.warpCooldown > 0) return false;
     const index = this.warps.findIndex(o => o.x === source.x && o.y === source.y);
     if (index < 0) return false;
-    const target = this.warps[(index + 1) % this.warps.length];
+    const targetKey = prop(source, 'target', '');
+    const linked = targetKey ? this.warps.find(o => objectKey(o) === targetKey) : null;
+    const target = linked ?? this.warps[(index + 1) % this.warps.length];
     this.player.x = target.x * TILE + 10;
     this.player.y = target.y * TILE + 8;
     this.player.vx = 0;
@@ -353,13 +369,14 @@ export class GameEngine {
     for (const cannon of this.cannons) {
       cannon.timer -= dt;
       if (cannon.timer > 0) continue;
-      cannon.timer += 1.65;
+      cannon.timer += cannon.interval;
+      const left = cannon.direction === 'left';
       this.projectiles.push({
-        x: cannon.x + 31,
+        x: cannon.x + (left ? 2 : 31),
         y: cannon.y + 18,
         w: 15,
         h: 11,
-        vx: 300
+        vx: left ? -300 : 300
       });
     }
   }
@@ -370,7 +387,7 @@ export class GameEngine {
     projectileLoop:
     for (const shot of this.projectiles) {
       shot.x += shot.vx * dt;
-      if (shot.x > this.stage.width * TILE + TILE) continue;
+      if (shot.x > this.stage.width * TILE + TILE || shot.x + shot.w < -TILE) continue;
 
       if (overlaps(shot, this.player)) {
         this.die();
@@ -379,7 +396,7 @@ export class GameEngine {
 
       for (const crate of this.crates) {
         if (!overlaps(shot, crate)) continue;
-        this.tryPushCrate(crate, TILE * .32);
+        this.tryPushCrate(crate, Math.sign(shot.vx) * TILE * .32);
         continue projectileLoop;
       }
 
@@ -395,7 +412,7 @@ export class GameEngine {
         const button = { x: o.x * TILE + 5, y: o.y * TILE + 22, w: 38, h: 22 };
         if (!overlaps(shot, button)) continue;
         if (o.type === 'switch') this.toggleSwitch();
-        else this.activateTimer();
+        else this.activateTimer(prop(o, 'duration', 3.2));
         continue projectileLoop;
       }
 
@@ -514,7 +531,7 @@ export class GameEngine {
 
       if (o.type === 'timerSwitch') {
         switchesNow.add(key);
-        if (!this.touchingSwitches.has(key)) this.activateTimer();
+        if (!this.touchingSwitches.has(key)) this.activateTimer(prop(o, 'duration', 3.2));
       }
 
       if (o.type === 'goal') this.clear = true;
