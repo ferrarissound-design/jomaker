@@ -533,10 +533,19 @@ class ThreePlayRenderer {
     }
   }
 
+  releaseDynamicNode(node) {
+    if (!node) return;
+    this.dynamic.remove(node);
+    if (node.userData.ownedMaterial) {
+      node.userData.ownedMaterial.dispose();
+      node.userData.ownedMaterial = null;
+    }
+  }
+
   ensureEnemies(game) {
     const signature = game.enemies.map(e => e.type ?? 'enemy').join('|');
     if (signature === this.enemySignature) return;
-    for (const node of this.enemyNodes) this.dynamic.remove(node);
+    for (const node of this.enemyNodes) this.releaseDynamicNode(node);
     this.enemyNodes = game.enemies.map(e => {
       const node = e.type === 'flyingEnemy'
         ? this.makePteranodon()
@@ -555,7 +564,7 @@ class ThreePlayRenderer {
     }
     while (list.length > targetCount) {
       const node = list.pop();
-      this.dynamic.remove(node);
+      this.releaseDynamicNode(node);
     }
   }
 
@@ -650,10 +659,12 @@ class ThreePlayRenderer {
   }
 
   dispose() {
-    for (const node of this.enemyNodes) {
-      if (node.userData.ownedMaterial) node.userData.ownedMaterial.dispose();
+    for (const node of this.enemyNodes) this.releaseDynamicNode(node);
+    this.enemyNodes = [];
+    if (this.playerNode?.userData.ownedMaterial) {
+      this.playerNode.userData.ownedMaterial.dispose();
+      this.playerNode.userData.ownedMaterial = null;
     }
-    if (this.playerNode?.userData.ownedMaterial) this.playerNode.userData.ownedMaterial.dispose();
     for (const material of this.materials.values()) material.dispose();
     for (const geometry of this.geometries.values()) geometry.dispose();
     this.renderer.dispose();
