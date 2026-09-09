@@ -130,10 +130,93 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false,
   }
 
   if (type === 'enemy') {
-    ctx.beginPath(); ctx.roundRect(6, 13, 36, 32, 10); ctx.fill();
+    const stride = Math.sin(time * 12) * 1.8;
+    const dir = props?.direction === 'left' ? -1 : 1;
+    ctx.save();
+    ctx.translate(24, 22);
+    ctx.scale(dir, 1);
+
+    // Small carnivorous dinosaur: low body, counterbalancing tail and quick legs.
+    ctx.fillStyle = '#c98a63';
+    ctx.beginPath();
+    ctx.moveTo(-8, 5);
+    ctx.bezierCurveTo(-17, 3, -24, 7, -28, 12);
+    ctx.bezierCurveTo(-20, 10, -13, 11, -5, 13);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#d59a72';
+    ctx.beginPath(); ctx.ellipse(-2, 7, 13, 9, -.08, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = '#b97857';
+    ctx.beginPath(); ctx.roundRect(-7, 12 + stride, 6, 13, 3); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(3, 12 - stride, 6, 13, 3); ctx.fill();
+    ctx.fillRect(-9, 23 + stride, 10, 3);
+    ctx.fillRect(3, 23 - stride, 11, 3);
+
+    ctx.fillStyle = '#dca17b';
+    ctx.beginPath(); ctx.ellipse(8, 0, 9, 8, -.08, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(15, 2, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+    ctx.strokeStyle = '#8b5747';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(12, 4); ctx.lineTo(22, 4); ctx.stroke();
+
+    ctx.fillStyle = '#f4df8b';
+    ctx.beginPath(); ctx.arc(9, -2, 2.3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#26353b';
+    ctx.beginPath(); ctx.arc(9.6, -2, 1, 0, Math.PI * 2); ctx.fill();
+
+    ctx.strokeStyle = '#b97857';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(5, 8); ctx.lineTo(11, 11); ctx.lineTo(14, 9); ctx.stroke();
+    ctx.restore();
+  }
+
+  if (type === 'flyingEnemy') {
+    const flap = Math.sin(time * 11) * 7;
+    const dir = props?.direction === 'left' ? -1 : 1;
+    ctx.save();
+    ctx.translate(24, 24);
+    ctx.scale(dir, 1);
+
+    // Pteranodon: broad membrane wings, long beak and rear crest.
+    ctx.fillStyle = '#8aa6b8';
+    ctx.beginPath();
+    ctx.moveTo(-3, -2);
+    ctx.bezierCurveTo(-12, -10 - flap, -20, -13 - flap, -25, -5);
+    ctx.bezierCurveTo(-18, -4, -11, 2 + flap * .25, -3, 5);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(2, -2);
+    ctx.bezierCurveTo(10, -10 - flap, 18, -13 - flap, 24, -4);
+    ctx.bezierCurveTo(17, -3, 10, 3 + flap * .25, 2, 5);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#718fa3';
+    ctx.beginPath(); ctx.ellipse(0, 4, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = '#9bb4c3';
+    ctx.beginPath(); ctx.ellipse(8, -1, 7, 6, -.12, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(12, -2); ctx.lineTo(27, 1); ctx.lineTo(12, 4); ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#6f8795';
+    ctx.beginPath();
+    ctx.moveTo(5, -5); ctx.lineTo(-5, -12); ctx.lineTo(8, -7); ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#f1d66e';
+    ctx.beginPath(); ctx.arc(9, -3, 1.8, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#243442';
-    ctx.fillRect(13, 23, 6, 6); ctx.fillRect(29, 23, 6, 6);
-    ctx.fillRect(10, 43, 9, 4); ctx.fillRect(29, 43, 9, 4);
+    ctx.beginPath(); ctx.arc(9.4, -3, .8, 0, Math.PI * 2); ctx.fill();
+
+    ctx.strokeStyle = '#607d8e';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-2, 9); ctx.lineTo(-6, 14); ctx.moveTo(3, 9); ctx.lineTo(7, 14); ctx.stroke();
+    ctx.restore();
   }
 
   if (type === 'checkpoint') {
@@ -301,7 +384,7 @@ export function render(ctx, w, h, stage, camera, scale, editing, game, time, sel
   for (const o of stage.objects) {
     const key = `${o.x},${o.y}`;
     if (o.x * TILE < camera - TILE || o.x * TILE > camera + w / scale + TILE) continue;
-    if (game && ['enemy', 'movingPlatform', 'crate'].includes(o.type)) continue;
+    if (game && ['enemy', 'flyingEnemy', 'movingPlatform', 'crate'].includes(o.type)) continue;
     if (game?.coins.has(key) && o.type === 'coin') continue;
     if (game?.collectedKeys.has(key) && o.type === 'key') continue;
     if (game?.openedDoors.has(key) && o.type === 'door') continue;
@@ -340,7 +423,12 @@ export function render(ctx, w, h, stage, camera, scale, editing, game, time, sel
     }
     for (const e of game.enemies) {
       if (e.x > camera - TILE && e.x < camera + w / scale + TILE) {
-        drawPart(ctx, 'enemy', e.x - 7, e.y - 12, TILE, time);
+        const enemyType = e.type ?? 'enemy';
+        const offsetX = enemyType === 'flyingEnemy' ? 4 : 7;
+        const offsetY = enemyType === 'flyingEnemy' ? 10 : 12;
+        drawPart(ctx, enemyType, e.x - offsetX, e.y - offsetY, TILE, time, false, {
+          direction: e.vx < 0 ? 'left' : 'right'
+        });
       }
     }
     ctx.fillStyle = '#344950';
