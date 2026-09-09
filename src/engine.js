@@ -110,8 +110,32 @@ export class GameEngine {
     this.projectiles = [];
 
     this.enemies = this.stage.objects
-      .filter(o => o.type === 'enemy')
-      .map(o => ({ key: objectKey(o), x: o.x * TILE + 7, y: o.y * TILE + 12, w: 34, h: 36, vx: 65, vy: 0, grounded: false }));
+      .filter(o => ['enemy', 'flyingEnemy'].includes(o.type))
+      .map((o, index) => o.type === 'flyingEnemy'
+        ? {
+            key: objectKey(o),
+            type: 'flyingEnemy',
+            x: o.x * TILE + 4,
+            y: o.y * TILE + 10,
+            baseY: o.y * TILE + 10,
+            w: 40,
+            h: 24,
+            vx: 82,
+            phase: index * .85,
+            minX: Math.max(0, (o.x - 2) * TILE + 4),
+            maxX: Math.min(this.stage.width * TILE - 40, (o.x + 2) * TILE + 4)
+          }
+        : {
+            key: objectKey(o),
+            type: 'enemy',
+            x: o.x * TILE + 7,
+            y: o.y * TILE + 12,
+            w: 34,
+            h: 36,
+            vx: 65,
+            vy: 0,
+            grounded: false
+          });
 
     this.rebuildRuntime();
 
@@ -436,6 +460,20 @@ export class GameEngine {
     return false;
   }
 
+  moveFlyingEnemy(enemy, dt) {
+    enemy.x += enemy.vx * dt;
+    if (enemy.x <= enemy.minX) {
+      enemy.x = enemy.minX;
+      enemy.vx = Math.abs(enemy.vx);
+    } else if (enemy.x >= enemy.maxX) {
+      enemy.x = enemy.maxX;
+      enemy.vx = -Math.abs(enemy.vx);
+    }
+
+    const bob = Math.sin(this.time * 3.2 + enemy.phase) * 12;
+    enemy.y = Math.max(4, Math.min(this.stage.height * TILE - enemy.h - 4, enemy.baseY + bob));
+  }
+
   step(dt, input) {
     if (this.clear) return;
     const p = this.player;
@@ -478,10 +516,14 @@ export class GameEngine {
 
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const e = this.enemies[i];
-      const { wall } = this.move(e, dt, false);
-      const ahead = e.vx > 0 ? e.x + e.w + 5 : e.x - 5;
-      const support = this.solids.has(`${Math.floor(ahead / TILE)},${Math.floor((e.y + e.h + 5) / TILE)}`);
-      if (wall || e.x <= 0 || e.x + e.w >= this.stage.width * TILE || (e.grounded && !support)) e.vx *= -1;
+      if (e.type === 'flyingEnemy') {
+        this.moveFlyingEnemy(e, dt);
+      } else {
+        const { wall } = this.move(e, dt, false);
+        const ahead = e.vx > 0 ? e.x + e.w + 5 : e.x - 5;
+        const support = this.solids.has(`${Math.floor(ahead / TILE)},${Math.floor((e.y + e.h + 5) / TILE)}`);
+        if (wall || e.x <= 0 || e.x + e.w >= this.stage.width * TILE || (e.grounded && !support)) e.vx *= -1;
+      }
 
       if (!overlaps(p, e)) continue;
       const stomp = p.vy >= 0 && movement.bottomBefore <= e.y + 10;
