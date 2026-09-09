@@ -21,7 +21,16 @@ try {
     await page.locator('#share').click();assert.match(await page.locator('.share-code').inputValue(),/^JO1\./);await page.locator('[data-close]').click();
     const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('jomaker.stages.v1')));assert.equal(stored.length,1);assert.ok(stored[0].data.objects.some(o=>o.type==='enemy'));
     await page.screenshot({path:`artifacts/${name}-editor.png`});
-    await page.locator('#play').click();await page.keyboard.down('KeyD');await page.keyboard.press('Space');await page.waitForTimeout(150);await page.keyboard.up('KeyD');
+    await page.locator('#play').click();
+    if(name==='portrait'){
+      const hud=await page.locator('#hud').boundingBox(),hint=await page.locator('.play-top-ui .hint').boundingBox(),portraitTip=await page.locator('.play-top-ui .portrait').boundingBox();
+      assert.ok(hud.y+hud.height<=hint.y,'portrait HUD and hint must not overlap');
+      assert.ok(hint.y+hint.height<=portraitTip.y,'portrait hint and rotation tip must not overlap');
+      const leftControl=await page.locator('[data-input="left"]').boundingBox();
+      assert.ok(portraitTip.y+portraitTip.height<leftControl.y,'top UI must stay above touch controls');
+      assert.ok((await page.locator('.playing .toolbar').boundingBox()).height<130,'portrait toolbar must stay compact');
+    }
+    await page.keyboard.down('KeyD');await page.keyboard.press('Space');await page.waitForTimeout(150);await page.keyboard.up('KeyD');
     const session=await context.newCDPSession(page);
     const right=await page.locator('[data-input="right"]').boundingBox(),jump=await page.locator('[data-input="jump"]').boundingBox();
     const t1={x:right.x+right.width/2,y:right.y+right.height/2,id:1},t2={x:jump.x+jump.width/2,y:jump.y+jump.height/2,id:2};
