@@ -10,6 +10,7 @@ export class GameEngine {
     this.deaths = 0;
     this.checkpoint = null;
     this.time = 0;
+    this.jumpSerial = 0;
     this.reset();
   }
 
@@ -453,6 +454,7 @@ export class GameEngine {
       this.coyote = 0;
       this.buffer = 0;
       this.jumpCuttable = true;
+      this.jumpSerial++;
     }
 
     if (this.jumpCuttable && !jumpHeld && p.vy < -260) {
