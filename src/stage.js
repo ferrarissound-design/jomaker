@@ -48,14 +48,35 @@ export function validateStage(s) {
 }
 
 function applyPlace(s, type, x, y) {
+  const atIndex = s.objects.findIndex(o => o.x === x && o.y === y);
+  const at = atIndex >= 0 ? s.objects[atIndex] : null;
+
   if (type === 'start') {
+    if (s.playerStart.x === x && s.playerStart.y === y && !at) return false;
     s.playerStart = { x, y };
-    s.objects = s.objects.filter(o => o.x !== x || o.y !== y);
-    return;
+    if (at) s.objects.splice(atIndex, 1);
+    return true;
   }
-  if (s.playerStart.x === x && s.playerStart.y === y && type !== 'erase') return;
-  s.objects = s.objects.filter(o => (o.x !== x || o.y !== y) && !(type === 'goal' && o.type === 'goal'));
-  if (type !== 'erase') s.objects.push({ type, x, y });
+
+  if (s.playerStart.x === x && s.playerStart.y === y && type !== 'erase') return false;
+
+  if (type === 'erase') {
+    if (!at) return false;
+    s.objects.splice(atIndex, 1);
+    return true;
+  }
+
+  if (type === 'goal') {
+    if (at?.type === 'goal') return false;
+    s.objects = s.objects.filter(o => o.type !== 'goal' && (o.x !== x || o.y !== y));
+    s.objects.push({ type, x, y });
+    return true;
+  }
+
+  if (at?.type === type) return false;
+  if (at) s.objects.splice(atIndex, 1);
+  s.objects.push({ type, x, y });
+  return true;
 }
 
 export class StageEditor {
@@ -83,7 +104,7 @@ export class StageEditor {
   place(type, x, y) {
     if (x < 0 || y < 0 || x >= this.stage.width || y >= this.stage.height) return false;
     const before = clone(this.stage);
-    applyPlace(this.stage, type, x, y);
+    if (!applyPlace(this.stage, type, x, y)) return false;
     return this.remember(before);
   }
 
@@ -94,9 +115,7 @@ export class StageEditor {
   strokePlace(type, x, y) {
     if (x < 0 || y < 0 || x >= this.stage.width || y >= this.stage.height) return false;
     if (!this.strokeBefore) this.beginStroke();
-    const before = JSON.stringify(this.stage);
-    applyPlace(this.stage, type, x, y);
-    return before !== JSON.stringify(this.stage);
+    return applyPlace(this.stage, type, x, y);
   }
 
   endStroke() {
