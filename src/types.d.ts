@@ -26,3 +26,9 @@ export interface SavedStage {
   updatedAt: string;
   data: StageData;
 }
+
+export interface StageDraft {
+  stageId: string | null;
+  updatedAt: string;
+  data: StageData;
+}
