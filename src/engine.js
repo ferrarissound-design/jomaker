@@ -103,6 +103,9 @@ export class GameEngine {
     this.brokenBlocks = new Set();
     this.touchingSwitches = new Set();
     this.warpCooldown = 0;
+    this.warpLockKey = null;
+    this.time = 0;
+    this.hasGroundContact = false;
     this.clear = false;
     this.coyote = 0;
     this.buffer = 0;
@@ -181,7 +184,7 @@ export class GameEngine {
     for (const o of this.stage.objects.filter(o => o.type === 'switchBlock')) {
       const key = objectKey(o);
       if (on) this.solids.delete(key);
-      else this.solids.set(key, this.makeSolid(o));
+      else this.tryRestoreSolid(o);
     }
   }
 
@@ -195,7 +198,7 @@ export class GameEngine {
     for (const o of this.stage.objects.filter(o => o.type === 'pressureBlock')) {
       const key = objectKey(o);
       if (active) this.solids.delete(key);
-      else this.solids.set(key, this.makeSolid(o));
+      else this.tryRestoreSolid(o);
     }
   }
 
@@ -203,7 +206,27 @@ export class GameEngine {
     for (const o of this.stage.objects.filter(o => o.type === 'enemyDoor')) {
       const key = objectKey(o);
       if (this.enemies.length === 0) this.solids.delete(key);
-      else if (!this.solids.has(key)) this.solids.set(key, this.makeSolid(o));
+      else this.tryRestoreSolid(o);
+    }
+  }
+
+  tryRestoreSolid(o) {
+    const solid = this.makeSolid(o);
+    const bodies = [this.player, ...(this.crates ?? []), ...(this.enemies ?? [])].filter(Boolean);
+    if (bodies.some(body => overlaps(body, solid))) return false;
+    this.solids.set(solid.key, solid);
+    return true;
+  }
+
+  restoreDynamicSolids() {
+    for (const o of this.stage.objects) {
+      const key = objectKey(o);
+      if (this.solids.has(key)) continue;
+      const inactiveSwitch = o.type === 'switchBlock' && !this.switchOn;
+      const inactivePressure = o.type === 'pressureBlock' && !this.pressureActive;
+      const inactiveTimer = o.type === 'timerBlock' && this.timerGate <= 0;
+      const closedEnemyDoor = o.type === 'enemyDoor' && this.enemies.length > 0;
+      if (inactiveSwitch || inactivePressure || inactiveTimer || closedEnemyDoor) this.tryRestoreSolid(o);
     }
   }
 
@@ -215,12 +238,8 @@ export class GameEngine {
   }
 
   tickTimer(dt) {
-    if (this.timerGate <= 0) return;
-    this.timerGate = Math.max(0, this.timerGate - dt);
-    if (this.timerGate > 0) return;
-    for (const o of this.stage.objects.filter(o => o.type === 'timerBlock')) {
-      this.solids.set(objectKey(o), this.makeSolid(o));
-    }
+    if (this.timerGate > 0) this.timerGate = Math.max(0, this.timerGate - dt);
+    if (this.timerGate <= 0) this.restoreDynamicSolids();
   }
 
   tryPushCrate(crate, dx) {
@@ -393,6 +412,7 @@ export class GameEngine {
     this.player.vy = 0;
     this.player.platformKey = null;
     this.warpCooldown = .55;
+    this.warpLockKey = objectKey(target);
     return true;
   }
 
@@ -553,6 +573,12 @@ export class GameEngine {
 
     const switchesNow = new Set();
 
+    if (this.warpLockKey) {
+      const locked = this.warps.find(o => objectKey(o) === this.warpLockKey);
+      const portal = locked && { x: locked.x * TILE + 6, y: locked.y * TILE + 4, w: 36, h: 42 };
+      if (!portal || !overlaps(p, portal)) this.warpLockKey = null;
+    }
+
     for (const o of this.stage.objects) {
       if (Math.abs(o.x * TILE - p.x) > TILE * 2) continue;
       const key = objectKey(o);
@@ -570,7 +596,7 @@ export class GameEngine {
 
       if (o.type === 'warp') {
         const portal = { x: o.x * TILE + 6, y: o.y * TILE + 4, w: 36, h: 42 };
-        if (overlaps(p, portal) && this.useWarp(o)) break;
+        if (key !== this.warpLockKey && overlaps(p, portal) && this.useWarp(o)) break;
         continue;
       }
 
@@ -607,6 +633,7 @@ export class GameEngine {
     }
 
     this.touchingSwitches = switchesNow;
+    this.restoreDynamicSolids();
   }
 
   die() {
