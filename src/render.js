@@ -153,17 +153,121 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false,
 }
 
 export function drawPlayer(ctx, p, time) {
+  const dir = p.facing ?? (p.vx < 0 ? -1 : 1);
+  const running = p.grounded && Math.abs(p.vx) > 1;
+  const step = running ? Math.sin(time * 18) * 2.8 : 0;
+  const bob = running ? Math.abs(Math.sin(time * 18)) * 1.2 : (!p.grounded ? -1.5 : 0);
+
   ctx.save();
-  ctx.translate(p.x, p.y);
-  ctx.fillStyle = '#77cfbf';
-  ctx.beginPath(); ctx.roundRect(0, 3, p.w, 31, 9); ctx.fill();
-  ctx.fillStyle = '#f3f5df';
-  ctx.beginPath(); ctx.roundRect(4, 8, 20, 14, 5); ctx.fill();
-  ctx.fillStyle = '#193943'; ctx.fillRect(8, 12, 4, 5); ctx.fillRect(18, 12, 4, 5);
-  ctx.fillStyle = '#efb66f'; ctx.fillRect(-3, 25, 34, 5);
-  ctx.fillStyle = '#27565e';
-  const step = p.grounded && p.vx ? Math.sin(time * 18) * 3 : 0;
-  ctx.fillRect(3, 33, 8, 5 + step); ctx.fillRect(18, 33, 8, 5 - step);
+  ctx.translate(p.x + p.w / 2, p.y + bob);
+  ctx.scale(dir, 1);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  // Tail: the silhouette intentionally extends beyond the physics hitbox.
+  ctx.fillStyle = '#73cb7e';
+  ctx.beginPath();
+  ctx.moveTo(-7, 17);
+  ctx.bezierCurveTo(-18, 15, -29, 20, -38, 28);
+  ctx.bezierCurveTo(-25, 25, -14, 26, -4, 29);
+  ctx.closePath();
+  ctx.fill();
+
+  // Back bumps.
+  ctx.fillStyle = '#5caf69';
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.arc(-8 + i * 5, 12 - Math.abs(i - 1.5), 2.7, Math.PI, 0);
+    ctx.fill();
+  }
+
+  // Body and pale belly.
+  ctx.fillStyle = '#82d98a';
+  ctx.beginPath();
+  ctx.ellipse(-1, 24, 17, 13, -0.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#dff2c9';
+  ctx.beginPath();
+  ctx.ellipse(5, 26, 9, 9, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Legs with a tiny run cycle.
+  ctx.fillStyle = '#67bd73';
+  ctx.beginPath(); ctx.roundRect(-8, 29 + step, 9, 11 - step * .25, 4); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(5, 29 - step, 9, 11 + step * .25, 4); ctx.fill();
+
+  // Feet and claws.
+  ctx.fillStyle = '#5aa866';
+  ctx.beginPath(); ctx.roundRect(-10, 37 + step, 13, 5, 3); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(3, 37 - step, 14, 5, 3); ctx.fill();
+  ctx.fillStyle = '#f4f0d6';
+  ctx.beginPath();
+  ctx.moveTo(-8, 40 + step); ctx.lineTo(-4, 39 + step); ctx.lineTo(-5, 42 + step);
+  ctx.moveTo(8, 40 - step); ctx.lineTo(12, 39 - step); ctx.lineTo(11, 42 - step);
+  ctx.fill();
+
+  // Tiny T-rex arms.
+  ctx.strokeStyle = '#65b970';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(8, 24);
+  ctx.lineTo(15, 28);
+  ctx.lineTo(19, 26);
+  ctx.stroke();
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(18, 26); ctx.lineTo(21, 24);
+  ctx.moveTo(18, 27); ctx.lineTo(22, 28);
+  ctx.stroke();
+
+  // Oversized head and snout, inspired by the soft 3D dinosaur reference.
+  ctx.fillStyle = '#8be393';
+  ctx.beginPath();
+  ctx.ellipse(10, 11, 14, 12, -0.12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(20, 15, 13, 8.5, 0.03, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Brow gives it the grumpy-cute T-rex expression.
+  ctx.fillStyle = '#6ec877';
+  ctx.beginPath();
+  ctx.ellipse(10, 6, 9, 3.3, -0.22, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Mouth.
+  ctx.fillStyle = '#653d3d';
+  ctx.beginPath();
+  ctx.roundRect(12, 14, 18, 7, 3);
+  ctx.fill();
+  ctx.fillStyle = '#e98a88';
+  ctx.beginPath();
+  ctx.roundRect(18, 18, 10, 3, 2);
+  ctx.fill();
+
+  // Teeth.
+  ctx.fillStyle = '#fffdf0';
+  for (let i = 0; i < 4; i++) {
+    const tx = 14 + i * 4;
+    ctx.beginPath();
+    ctx.moveTo(tx, 14);
+    ctx.lineTo(tx + 2, 18);
+    ctx.lineTo(tx + 4, 14);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Eye with a vertical pupil.
+  ctx.fillStyle = '#f5d46f';
+  ctx.beginPath(); ctx.ellipse(11, 10, 3.7, 4.6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#273a32';
+  ctx.beginPath(); ctx.ellipse(11.5, 10, 1.1, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Nostril.
+  ctx.fillStyle = '#355d45';
+  ctx.beginPath(); ctx.ellipse(26, 12, 1.5, 1.1, 0, 0, Math.PI * 2); ctx.fill();
+
   ctx.restore();
 }
 
