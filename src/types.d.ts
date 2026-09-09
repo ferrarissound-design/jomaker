@@ -3,7 +3,7 @@ export type PartType =
   | 'ground' | 'block' | 'platform' | 'movingPlatform' | 'spring' | 'breakable'
   | 'key' | 'door' | 'switch' | 'switchBlock' | 'warp' | 'crate' | 'plate'
   | 'pressureBlock' | 'cannon' | 'enemyDoor' | 'timerSwitch' | 'timerBlock'
-  | 'coin' | 'spike' | 'enemy' | 'checkpoint' | 'goal';
+  | 'coin' | 'spike' | 'enemy' | 'flyingEnemy' | 'checkpoint' | 'goal';
 
 export type BackgroundId = 'tropicalSea' | 'sunsetCoast' | 'classic';
 export type PartProps = Record<string, string | number | boolean>;
