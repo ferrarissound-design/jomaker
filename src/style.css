@@ -15,10 +15,11 @@
 .play-top-ui .hud{align-self:flex-end;white-space:nowrap}
 .play-top-ui .portrait{display:none}
 @media(orientation:portrait){
-  .workspace.playing .toolbar{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"edit mode retry" "title title title";gap:5px 8px;padding:6px 8px}
+  .workspace.playing .toolbar{display:grid;grid-template-columns:auto 1fr auto auto;grid-template-areas:"edit mode pause retry" "title title title title";gap:5px 6px;padding:6px 8px}
   .workspace.playing .toolbar #edit{grid-area:edit}
   .workspace.playing .toolbar .mode{grid-area:mode;display:block;justify-self:center}
   .workspace.playing .toolbar strong{grid-area:title;min-width:0;font-size:14px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .workspace.playing .toolbar #pause{grid-area:pause;min-width:44px;padding:8px 10px}
   .workspace.playing .toolbar #restart{grid-area:retry}
   .workspace.playing .toolbar .spacer{display:none}
   .workspace.playing .play-top-ui{top:8px;left:8px;right:8px;gap:6px}
@@ -50,3 +51,8 @@
   touch-action:none!important;
   overscroll-behavior:contain;
 }
+
+
+.pause-overlay{z-index:8;background:#153b4290;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.pause-modal{width:min(90vw,390px)}
+.pause-modal .actions{justify-content:center}
