@@ -36,3 +36,7 @@
 .controls button{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-appearance:none;appearance:none}
 .controls button:focus{outline:none}
 .controls button:focus-visible{outline:3px solid #e2aa51;outline-offset:3px}
+
+/* iPhone Safari must treat the whole play scene as a game surface, never selectable text. */
+.workspace.playing,.workspace.playing *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;-webkit-tap-highlight-color:transparent}
+.workspace.playing .play-top-ui,.workspace.playing .play-top-ui *{pointer-events:none}
