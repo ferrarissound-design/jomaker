@@ -13,6 +13,8 @@ try {
     await page.goto('http://localhost:5173');assert.match(await page.locator('meta[name="viewport"]').getAttribute('content'),/user-scalable=no/);await page.locator('#new').click();
     await page.locator('#name').fill(`Test ${name}`);await page.waitForFunction(expected=>JSON.parse(localStorage.getItem('jomaker.draft.v1'))?.data.name===expected,`Test ${name}`);await page.locator('#name').press('Tab');
     const bounds=await page.locator('canvas').boundingBox();
+    await page.locator('[data-tool="goal"]').click();await page.mouse.move(bounds.x+80,bounds.y+100);await page.mouse.down();await page.mouse.move(bounds.x+240,bounds.y+100,{steps:5});await page.mouse.up();
+    assert.ok((await page.evaluate(async()=>{const {StageStore}=await import('/src/stage.js');document.querySelector('#save').click();return new StageStore().list()[0].data.objects.find(o=>o.type==='goal')?.x;}))>3,'goal drag must commit the release position');
     await page.locator('[data-tool="enemy"]').click();await page.mouse.click(bounds.x+220,bounds.y+bounds.height-70);
     await page.locator('#undo').click();await page.locator('#redo').click();
     await page.locator('[data-tool="pan"]').click();await page.mouse.move(bounds.x+width*.65,bounds.y+80);await page.mouse.down();await page.mouse.move(bounds.x+width*.3,bounds.y+80,{steps:10});await page.mouse.up();
