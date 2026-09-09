@@ -7,4 +7,5 @@ await mkdir('dist',{recursive:true});
 await copyFile('index.html','dist/index.html');
 await cp('src','dist/src',{recursive:true});
 await cp('stages','dist/stages',{recursive:true});
+await copyFile('sunrise_at_pixel_peak.mp3','dist/sunrise_at_pixel_peak.mp3');
 console.log('Built dist/');
