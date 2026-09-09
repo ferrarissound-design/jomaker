@@ -355,10 +355,13 @@ class ThreePlayRenderer {
     pupil.position.set(.5, .34, .285);
     g.add(eye, pupil);
 
-    const leftLeg = this.box(.17, .42, .2, accentColor);
-    leftLeg.position.set(-.23, -.39, .16);
-    const rightLeg = this.box(.17, .42, .2, accentColor);
-    rightLeg.position.set(.16, -.39, -.1);
+    // Keep the visual legs inside the player's physics silhouette.
+    // The original long boxes swung past the body on the 2.5D camera,
+    // which made the feet look detached on iPhone portrait layouts.
+    const leftLeg = this.box(.15, .30, .18, accentColor);
+    leftLeg.position.set(-.18, -.29, .14);
+    const rightLeg = this.box(.15, .30, .18, accentColor);
+    rightLeg.position.set(.13, -.29, -.09);
     g.add(leftLeg, rightLeg);
     g.userData.leftLeg = leftLeg;
     g.userData.rightLeg = rightLeg;
@@ -556,10 +559,10 @@ class ThreePlayRenderer {
     }
   }
 
-  bodyPosition(node, body, z) {
+  bodyPosition(node, body, z, yOffset = 0) {
     node.position.set(
       (body.x + body.w / 2) / TILE,
-      this.stage.height - (body.y + body.h / 2) / TILE,
+      this.stage.height - (body.y + body.h / 2) / TILE + yOffset,
       z
     );
   }
@@ -572,14 +575,14 @@ class ThreePlayRenderer {
 
   animateDinosaur(node, time, vx, grounded = true) {
     const running = grounded && Math.abs(vx) > 1;
-    const stride = running ? Math.sin(time * 12) * .55 : 0;
+    const stride = running ? Math.sin(time * 12) * .28 : 0;
     if (node.userData.leftLeg) node.userData.leftLeg.rotation.z = stride;
     if (node.userData.rightLeg) node.userData.rightLeg.rotation.z = -stride;
     node.rotation.z = grounded ? 0 : -.06 * Math.sign(vx || 1);
   }
 
   updateDynamic(game, time) {
-    this.bodyPosition(this.playerNode, game.player, .72);
+    this.bodyPosition(this.playerNode, game.player, .72, .07);
     this.face(this.playerNode, game.player.vx, game.player.facing ?? 1);
     this.animateDinosaur(this.playerNode, time, game.player.vx, game.player.grounded);
 
