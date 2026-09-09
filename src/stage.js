@@ -16,6 +16,8 @@ export const PARTS = {
   pressureBlock: ['▤', '圧力ブロック', '#5e9fb0'],
   cannon: ['➤', '大砲', '#596a72'],
   enemyDoor: ['▥', '全滅ドア', '#765f8f'],
+  timerSwitch: ['◷', '時間スイッチ', '#d79c58'],
+  timerBlock: ['▨', '時間ブロック', '#dfb074'],
   coin: ['●', 'コイン', '#ffd572'],
   spike: ['▲', 'トゲ', '#e98283'],
   enemy: ['◆', '敵', '#b798d6'],
