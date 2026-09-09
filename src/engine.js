@@ -25,13 +25,14 @@ export class GameEngine {
 
   rebuildRuntime() {
     this.solids = new Map();
-    const solidTypes = ['ground', 'block', 'platform', 'breakable', 'door', 'switchBlock', 'pressureBlock', 'enemyDoor'];
+    const solidTypes = ['ground', 'block', 'platform', 'breakable', 'door', 'switchBlock', 'pressureBlock', 'enemyDoor', 'timerBlock'];
 
     for (const o of this.stage.objects) {
       if (!solidTypes.includes(o.type)) continue;
       if (o.type === 'switchBlock' && this.switchOn) continue;
       if (o.type === 'pressureBlock' && this.pressureActive) continue;
       if (o.type === 'enemyDoor' && this.enemies.length === 0) continue;
+      if (o.type === 'timerBlock' && this.timerGate > 0) continue;
       this.solids.set(objectKey(o), this.makeSolid(o));
     }
 
@@ -79,6 +80,7 @@ export class GameEngine {
 
     this.switchOn = false;
     this.pressureActive = false;
+    this.timerGate = 0;
     this.keys = 0;
     this.coins = new Set();
     this.collectedKeys = new Set();
@@ -162,6 +164,22 @@ export class GameEngine {
       const key = objectKey(o);
       if (this.enemies.length === 0) this.solids.delete(key);
       else if (!this.solids.has(key)) this.solids.set(key, this.makeSolid(o));
+    }
+  }
+
+  activateTimer(seconds = 3.2) {
+    this.timerGate = Math.max(this.timerGate, seconds);
+    for (const o of this.stage.objects.filter(o => o.type === 'timerBlock')) {
+      this.solids.delete(objectKey(o));
+    }
+  }
+
+  tickTimer(dt) {
+    if (this.timerGate <= 0) return;
+    this.timerGate = Math.max(0, this.timerGate - dt);
+    if (this.timerGate > 0) return;
+    for (const o of this.stage.objects.filter(o => o.type === 'timerBlock')) {
+      this.solids.set(objectKey(o), this.makeSolid(o));
     }
   }
 
@@ -373,10 +391,11 @@ export class GameEngine {
       }
 
       for (const o of this.stage.objects) {
-        if (o.type !== 'switch') continue;
+        if (!['switch', 'timerSwitch'].includes(o.type)) continue;
         const button = { x: o.x * TILE + 5, y: o.y * TILE + 22, w: 38, h: 22 };
         if (!overlaps(shot, button)) continue;
-        this.toggleSwitch();
+        if (o.type === 'switch') this.toggleSwitch();
+        else this.activateTimer();
         continue projectileLoop;
       }
 
@@ -399,6 +418,7 @@ export class GameEngine {
     const jumpHeld = input.jumpHeld ?? input.jump;
 
     this.warpCooldown = Math.max(0, this.warpCooldown - dt);
+    this.tickTimer(dt);
     this.updateMovingPlatforms(dt);
     this.carryPlayerWithPlatform();
     this.moveCrates(dt);
@@ -490,6 +510,11 @@ export class GameEngine {
       if (o.type === 'switch') {
         switchesNow.add(key);
         if (!this.touchingSwitches.has(key)) this.toggleSwitch();
+      }
+
+      if (o.type === 'timerSwitch') {
+        switchesNow.add(key);
+        if (!this.touchingSwitches.has(key)) this.activateTimer();
       }
 
       if (o.type === 'goal') this.clear = true;
