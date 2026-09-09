@@ -6,7 +6,7 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false)
   ctx.scale(size / TILE, size / TILE);
   ctx.fillStyle = PARTS[type]?.[2] ?? '#fff';
 
-  if (['ground', 'block', 'breakable', 'switchBlock', 'pressureBlock'].includes(type)) {
+  if (['ground', 'block', 'breakable', 'switchBlock', 'pressureBlock', 'timerBlock'].includes(type)) {
     ctx.beginPath();
     ctx.roundRect(1, 1, 46, 46, 6);
     ctx.fill();
@@ -19,7 +19,7 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false)
       ctx.moveTo(22, 22); ctx.lineTo(37, 39);
       ctx.stroke();
     } else {
-      ctx.fillStyle = type === 'ground' ? '#8bc8a0' : type === 'switchBlock' ? '#ffd1cd' : type === 'pressureBlock' ? '#c9e8ee' : '#ffd28a';
+      ctx.fillStyle = type === 'ground' ? '#8bc8a0' : type === 'switchBlock' ? '#ffd1cd' : type === 'pressureBlock' ? '#c9e8ee' : type === 'timerBlock' ? '#f4dec0' : '#ffd28a';
       ctx.fillRect(4, 3, 40, 6);
       ctx.fillStyle = '#152c3620';
       ctx.fillRect(7, 28, 12, 4);
@@ -102,11 +102,14 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false)
     }
   }
 
-  if (type === 'switch') {
-    ctx.fillStyle = active ? '#6bcf8c' : '#ef8a68';
+  if (type === 'switch' || type === 'timerSwitch') {
+    ctx.fillStyle = active ? '#6bcf8c' : type === 'timerSwitch' ? '#d79c58' : '#ef8a68';
     ctx.beginPath(); ctx.roundRect(5, 29, 38, 13, 6); ctx.fill();
     ctx.fillStyle = '#fff7df';
     ctx.beginPath(); ctx.arc(24, active ? 30 : 23, 10, 0, Math.PI * 2); ctx.fill();
+    if (type === 'timerSwitch') {
+      ctx.fillStyle = '#6f5330'; ctx.font = 'bold 12px sans-serif'; ctx.fillText('3s', 17, 18);
+    }
   }
 
   if (type === 'warp') {
@@ -196,11 +199,13 @@ export function render(ctx, w, h, stage, camera, scale, editing, game, time, sel
     if (game?.brokenBlocks.has(key) && o.type === 'breakable') continue;
     if (game?.switchOn && o.type === 'switchBlock') continue;
     if (game?.pressureActive && o.type === 'pressureBlock') continue;
+    if (game?.timerGate > 0 && o.type === 'timerBlock') continue;
     if (game && o.type === 'enemyDoor' && game.enemies.length === 0) continue;
 
     const active =
       (o.type === 'checkpoint' && game?.checkpoint?.x === o.x && game?.checkpoint?.y === o.y) ||
       (o.type === 'switch' && game?.switchOn) ||
+      (o.type === 'timerSwitch' && game?.timerGate > 0) ||
       (o.type === 'plate' && game?.pressureActive);
     drawPart(ctx, o.type, o.x * TILE, o.y * TILE, TILE, time, active);
   }
