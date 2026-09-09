@@ -117,7 +117,8 @@ export class GameEngine {
       vx: 0,
       vy: 0,
       grounded: false,
-      platformKey: null
+      platformKey: null,
+      facing: 1
     };
   }
 
@@ -443,6 +444,7 @@ export class GameEngine {
     this.buffer = input.jump ? .13 : Math.max(0, this.buffer - dt);
     this.coyote = p.grounded ? .11 : Math.max(0, this.coyote - dt);
     p.vx = (Number(input.right) - Number(input.left)) * 260;
+    if (p.vx) p.facing = Math.sign(p.vx);
 
     if (this.buffer > 0 && this.coyote > 0) {
       p.vy = -650;
