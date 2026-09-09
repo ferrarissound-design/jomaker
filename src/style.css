@@ -40,3 +40,13 @@
 /* iPhone Safari must treat the whole play scene as a game surface, never selectable text. */
 .workspace.playing,.workspace.playing *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;-webkit-tap-highlight-color:transparent}
 .workspace.playing .play-top-ui,.workspace.playing .play-top-ui *{pointer-events:none}
+
+
+/* Keep iOS browser gestures from stealing the end of a game-control touch. */
+.workspace.playing .viewport,
+.workspace.playing .viewport>canvas,
+.workspace.playing .controls,
+.workspace.playing .controls button{
+  touch-action:none!important;
+  overscroll-behavior:contain;
+}
