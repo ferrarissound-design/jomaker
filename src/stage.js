@@ -244,6 +244,7 @@ export class StageStore {
   constructor(storage = localStorage) {
     this.storage = storage;
     this.key = 'jomaker.stages.v1';
+    this.draftKey = 'jomaker.draft.v1';
   }
 
   list() {
@@ -276,5 +277,39 @@ export class StageStore {
 
   remove(id) {
     this.storage.setItem(this.key, JSON.stringify(this.list().filter(r => r.id !== id)));
+  }
+
+  saveDraft(stage, stageId = null) {
+    validateStage(stage);
+    if (stageId !== null && typeof stageId !== 'string') throw new Error('下書きデータを保存できません');
+    const draft = {
+      stageId,
+      updatedAt: new Date().toISOString(),
+      data: clone(stage)
+    };
+    this.storage.setItem(this.draftKey, JSON.stringify(draft));
+    return clone(draft);
+  }
+
+  loadDraft() {
+    const raw = this.storage.getItem(this.draftKey);
+    if (!raw) return null;
+    let draft;
+    try {
+      draft = JSON.parse(raw);
+    } catch {
+      throw new Error('下書きデータを読み込めません');
+    }
+    if (!draft || (draft.stageId !== null && typeof draft.stageId !== 'string') ||
+        typeof draft.updatedAt !== 'string' || !draft.data) {
+      throw new Error('下書きデータを読み込めません');
+    }
+    validateStage(draft.data);
+    return clone(draft);
+  }
+
+  clearDraft() {
+    if (typeof this.storage.removeItem === 'function') this.storage.removeItem(this.draftKey);
+    else this.storage.setItem(this.draftKey, '');
   }
 }

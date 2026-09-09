@@ -10,7 +10,7 @@ try {
   for(const [name,width,height] of [['phone',844,390],['tablet',1024,768],['portrait',390,844],['desktop',1440,900]]) {
     const context=await browser.newContext({viewport:{width,height},hasTouch:true,isMobile:name!=='desktop'});
     const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-    await page.goto('http://localhost:5173');await page.locator('#new').click();
+    await page.goto('http://localhost:5173');assert.match(await page.locator('meta[name="viewport"]').getAttribute('content'),/user-scalable=no/);await page.locator('#new').click();
     await page.locator('#name').fill(`Test ${name}`);await page.locator('#name').press('Tab');
     const bounds=await page.locator('canvas').boundingBox();
     await page.locator('[data-tool="enemy"]').click();await page.mouse.click(bounds.x+220,bounds.y+bounds.height-70);
@@ -22,6 +22,8 @@ try {
     const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('jomaker.stages.v1')));assert.equal(stored.length,1);assert.ok(stored[0].data.objects.some(o=>o.type==='enemy'));
     await page.screenshot({path:`artifacts/${name}-editor.png`});
     await page.locator('#play').click();
+    await page.locator('#pause').click();assert.equal(await page.locator('#pause').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('.pause-overlay').count(),1);await page.locator('#resume').click();assert.equal(await page.locator('.pause-overlay').count(),0);
+    await page.keyboard.press('Escape');assert.equal(await page.locator('.pause-overlay').count(),1);await page.keyboard.press('Escape');assert.equal(await page.locator('.pause-overlay').count(),0);
     if(name==='portrait'){
       const hud=await page.locator('#hud').boundingBox(),hint=await page.locator('.play-top-ui .hint').boundingBox(),portraitTip=await page.locator('.play-top-ui .portrait').boundingBox();
       assert.ok(hud.y+hud.height<=hint.y,'portrait HUD and hint must not overlap');
@@ -59,6 +61,12 @@ try {
     await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     assert.equal(await page.locator('.pressed').count(),0);
     await page.screenshot({path:`artifacts/${name}-play.png`});await page.locator('#edit').click();assert.equal(await page.locator('#name').inputValue(),`Test ${name}`);
+    if(name==='portrait'){
+      const editCanvas=await page.locator('.viewport canvas').boundingBox();await page.locator('[data-tool="block"]').click();await page.mouse.click(editCanvas.x+Math.min(180,editCanvas.width*.45),editCanvas.y+Math.min(150,editCanvas.height*.35));await page.waitForTimeout(1100);
+      assert.match(await page.locator('#save').textContent(),/●/,'unsaved state must be visible');
+      const draft=await page.evaluate(()=>JSON.parse(localStorage.getItem('jomaker.draft.v1')));assert.ok(draft?.data,'dirty editor must create a recovery draft');
+      await page.locator('#save').click();assert.equal(await page.evaluate(()=>localStorage.getItem('jomaker.draft.v1')),null,'manual save must clear recovery draft');
+    }
     await page.locator('#back').click();await page.reload();await page.locator('[data-edit]').click();assert.equal(await page.locator('#name').inputValue(),`Test ${name}`);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);
     console.log(`${name}: edit, undo/redo, pan, save/reload, play/return, layout passed`);await context.close();

@@ -1,4 +1,14 @@
 {
-  "name": "jomaker", "version": "1.0.0", "private": true, "type": "module",
-  "scripts": { "dev": "node scripts/serve.js", "build": "node scripts/build.js", "lint": "node scripts/check.js", "test": "node --test", "preview": "node scripts/serve.js dist" }
+  "name": "jomaker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.js",
+    "build": "node scripts/build.js",
+    "lint": "node scripts/check.js",
+    "test": "node --test",
+    "preview": "node scripts/serve.js dist",
+    "browser-check": "node scripts/browser-check.js"
+  }
 }
