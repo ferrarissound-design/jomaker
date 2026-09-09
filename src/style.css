@@ -56,3 +56,10 @@
 .pause-overlay{z-index:8;background:#153b4290;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .pause-modal{width:min(90vw,390px)}
 .pause-modal .actions{justify-content:center}
+
+
+/* Completion polish: recover unfinished work and make save state unmistakable. */
+#save.unsaved{background:#fff2d7;border-color:#e4b45e;color:#7b5720;box-shadow:0 0 0 2px #f2c77730 inset}
+.draft-card{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:0 0 34px;padding:20px 22px;border:1px solid #e5c17c;background:#fff8e8;border-radius:20px;box-shadow:0 12px 30px #7e5b1b12}
+.draft-card h2{font-size:20px;margin:4px 0 6px}.draft-card p{margin:0;color:#6d7c78;font-size:12px}.draft-card .actions{flex-shrink:0}
+@media(max-width:650px){.draft-card{align-items:flex-start;flex-direction:column}.draft-card .actions{width:100%}.draft-card .actions button{flex:1}}
