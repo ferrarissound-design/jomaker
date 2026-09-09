@@ -58,6 +58,37 @@ export function createStage() {
   };
 }
 
+export function resizeStage(stage, width) {
+  if (!Number.isInteger(width) || width < 10 || width > 300) {
+    throw new Error('ステージの長さは10〜300マスで指定してください');
+  }
+  if (stage.playerStart.x >= width) {
+    throw new Error(`スタート位置より短くはできません（最低 ${stage.playerStart.x + 1} マス）`);
+  }
+
+  const oldWidth = stage.width;
+  const floorY = stage.height - 2;
+  const floorXs = new Set(
+    stage.objects
+      .filter(o => o.type === 'ground' && o.y === floorY)
+      .map(o => o.x)
+  );
+  const hadFullFloor = Array.from({ length: oldWidth }, (_, x) => floorXs.has(x)).every(Boolean);
+
+  stage.width = width;
+  stage.objects = stage.objects.filter(o => o.x < width);
+
+  if (width > oldWidth && hadFullFloor) {
+    const occupied = new Set(stage.objects.map(o => `${o.x},${o.y}`));
+    for (let x = oldWidth; x < width; x++) {
+      const key = `${x},${floorY}`;
+      if (!occupied.has(key)) stage.objects.push({ type: 'ground', x, y: floorY });
+    }
+  }
+
+  return stage;
+}
+
 function validateProps(o) {
   if (o.props === undefined) return;
   if (!o.props || typeof o.props !== 'object' || Array.isArray(o.props)) {
