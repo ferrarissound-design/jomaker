@@ -26,7 +26,7 @@ function showEditor(){stop();mode='edit';game=null;camera=editCamera;cameraY=edi
   let pointer=null,lastPaint=null;const point=e=>{const rect=canvas.getBoundingClientRect();return{x:(e.clientX-rect.left)/scale+camera,y:(e.clientY-rect.top)/scale+cameraY};};
   const paint=e=>{const p=point(e),x=Math.floor(p.x/TILE),y=Math.floor(p.y/TILE),key=`${x},${y}`;selected={x,y};if(key===lastPaint)return;lastPaint=key;if(editor.strokePlace(tool,x,y))dirty=true;refresh();};
   canvas.onpointerdown=e=>{e.preventDefault();if(pointer!==null)return;pointer={id:e.pointerId,x:e.clientX,y:e.clientY,camera,cameraY};canvas.setPointerCapture(e.pointerId);if(tool!=='pan'){editor.beginStroke();lastPaint=null;paint(e);}};
-  canvas.onpointermove=e=>{if(!pointer||pointer.id!==e.pointerId)return;if(tool==='pan'){camera=Math.max(0,Math.min(maxCamera(),pointer.camera-(e.clientX-pointer.x)/scale));editCamera=camera;cameraY=Math.max(0,Math.min(editor.stage.height*TILE-h/scale,pointer.cameraY-(e.clientY-pointer.y)/scale));editCameraY=cameraY;}else paint(e);};
+  canvas.onpointermove=e=>{if(!pointer||pointer.id!==e.pointerId)return;if(tool==='pan'){camera=Math.max(0,Math.min(maxCamera(),pointer.camera-(e.clientX-pointer.x)/scale));editCamera=camera;cameraY=Math.max(0,Math.min(editor.stage.height*TILE-h/scale,pointer.cameraY-(e.clientY-pointer.y)/scale));editCameraY=cameraY;}else if(['start','goal'].includes(tool)){const p=point(e);selected={x:Math.floor(p.x/TILE),y:Math.floor(p.y/TILE)};}else paint(e);};
   const finishPointer=e=>{if(!pointer||pointer.id!==e.pointerId)return;if(tool!=='pan'){if(editor.endStroke())dirty=true;refresh();}pointer=null;lastPaint=null;selected=null;};
   canvas.onpointerup=finishPointer;canvas.onpointercancel=finishPointer;refresh();run();
 }
