@@ -11,7 +11,7 @@ try {
     const context=await browser.newContext({viewport:{width,height},hasTouch:true,isMobile:name!=='desktop'});
     const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto('http://localhost:5173');assert.match(await page.locator('meta[name="viewport"]').getAttribute('content'),/user-scalable=no/);await page.locator('#new').click();
-    await page.locator('#name').fill(`Test ${name}`);await page.locator('#name').press('Tab');
+    await page.locator('#name').fill(`Test ${name}`);await page.waitForFunction(expected=>JSON.parse(localStorage.getItem('jomaker.draft.v1'))?.data.name===expected,`Test ${name}`);await page.locator('#name').press('Tab');
     const bounds=await page.locator('canvas').boundingBox();
     await page.locator('[data-tool="enemy"]').click();await page.mouse.click(bounds.x+220,bounds.y+bounds.height-70);
     await page.locator('#undo').click();await page.locator('#redo').click();
