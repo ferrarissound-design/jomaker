@@ -30,3 +30,9 @@
   .workspace.playing .controls button{width:62px;height:58px;font-size:23px}
   .workspace.playing .controls .jump{width:82px;height:82px;font-size:13px}
 }
+
+/* iOS Safari: game controls are buttons, not selectable/long-pressable page content. */
+.controls,.controls *{-webkit-touch-callout:none}
+.controls button{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-appearance:none;appearance:none}
+.controls button:focus{outline:none}
+.controls button:focus-visible{outline:3px solid #e2aa51;outline-offset:3px}
