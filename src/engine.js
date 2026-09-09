@@ -12,20 +12,27 @@ export class GameEngine {
     this.reset();
   }
 
+  makeSolid(o) {
+    return {
+      ...o,
+      key: objectKey(o),
+      x: o.x * TILE,
+      y: o.y * TILE,
+      w: TILE,
+      h: o.type === 'platform' ? 12 : TILE
+    };
+  }
+
   rebuildRuntime() {
     this.solids = new Map();
+    const solidTypes = ['ground', 'block', 'platform', 'breakable', 'door', 'switchBlock', 'pressureBlock', 'enemyDoor'];
+
     for (const o of this.stage.objects) {
-      if (!['ground', 'block', 'platform', 'breakable', 'door', 'switchBlock'].includes(o.type)) continue;
+      if (!solidTypes.includes(o.type)) continue;
       if (o.type === 'switchBlock' && this.switchOn) continue;
-      const key = objectKey(o);
-      this.solids.set(key, {
-        ...o,
-        key,
-        x: o.x * TILE,
-        y: o.y * TILE,
-        w: TILE,
-        h: o.type === 'platform' ? 12 : TILE
-      });
+      if (o.type === 'pressureBlock' && this.pressureActive) continue;
+      if (o.type === 'enemyDoor' && this.enemies.length === 0) continue;
+      this.solids.set(objectKey(o), this.makeSolid(o));
     }
 
     this.movingPlatforms = this.stage.objects
@@ -40,6 +47,29 @@ export class GameEngine {
         h: 12
       }));
 
+    this.crates = this.stage.objects
+      .filter(o => o.type === 'crate')
+      .map(o => ({
+        key: objectKey(o),
+        spawnX: o.x * TILE + 4,
+        spawnY: o.y * TILE + 4,
+        x: o.x * TILE + 4,
+        y: o.y * TILE + 4,
+        w: 40,
+        h: 40,
+        vy: 0,
+        grounded: false
+      }));
+
+    this.cannons = this.stage.objects
+      .filter(o => o.type === 'cannon')
+      .map((o, index) => ({
+        key: objectKey(o),
+        x: o.x * TILE,
+        y: o.y * TILE,
+        timer: .35 + index * .12
+      }));
+
     this.warps = this.stage.objects.filter(o => o.type === 'warp');
   }
 
@@ -48,6 +78,7 @@ export class GameEngine {
     const spawn = this.checkpoint ?? this.stage.playerStart;
 
     this.switchOn = false;
+    this.pressureActive = false;
     this.keys = 0;
     this.coins = new Set();
     this.collectedKeys = new Set();
@@ -59,6 +90,12 @@ export class GameEngine {
     this.coyote = 0;
     this.buffer = 0;
     this.jumpCuttable = false;
+    this.projectiles = [];
+
+    this.enemies = this.stage.objects
+      .filter(o => o.type === 'enemy')
+      .map(o => ({ key: objectKey(o), x: o.x * TILE + 7, y: o.y * TILE + 12, w: 34, h: 36, vx: 65, vy: 0, grounded: false }));
+
     this.rebuildRuntime();
 
     this.player = {
@@ -71,10 +108,6 @@ export class GameEngine {
       grounded: false,
       platformKey: null
     };
-
-    this.enemies = this.stage.objects
-      .filter(o => o.type === 'enemy')
-      .map(o => ({ x: o.x * TILE + 7, y: o.y * TILE + 12, w: 34, h: 36, vx: 65, vy: 0 }));
   }
 
   nearby(body) {
@@ -101,9 +134,67 @@ export class GameEngine {
     this.solids.delete(o.key);
   }
 
+  setSwitch(on) {
+    this.switchOn = on;
+    for (const o of this.stage.objects.filter(o => o.type === 'switchBlock')) {
+      const key = objectKey(o);
+      if (on) this.solids.delete(key);
+      else this.solids.set(key, this.makeSolid(o));
+    }
+  }
+
+  toggleSwitch() {
+    this.setSwitch(!this.switchOn);
+  }
+
+  setPressure(active) {
+    if (this.pressureActive === active) return;
+    this.pressureActive = active;
+    for (const o of this.stage.objects.filter(o => o.type === 'pressureBlock')) {
+      const key = objectKey(o);
+      if (active) this.solids.delete(key);
+      else this.solids.set(key, this.makeSolid(o));
+    }
+  }
+
+  updateEnemyDoors() {
+    for (const o of this.stage.objects.filter(o => o.type === 'enemyDoor')) {
+      const key = objectKey(o);
+      if (this.enemies.length === 0) this.solids.delete(key);
+      else if (!this.solids.has(key)) this.solids.set(key, this.makeSolid(o));
+    }
+  }
+
+  tryPushCrate(crate, dx) {
+    if (!dx) return true;
+    const before = crate.x;
+    crate.x += dx;
+    crate.x = Math.max(0, Math.min(this.stage.width * TILE - crate.w, crate.x));
+
+    const blockedBySolid = this.nearby(crate).some(o => o.type !== 'platform' && overlaps(crate, o));
+    const blockedByCrate = this.crates.some(other => other !== crate && overlaps(crate, other));
+    if (blockedBySolid || blockedByCrate) {
+      crate.x = before;
+      return false;
+    }
+    return true;
+  }
+
   move(body, dt, isPlayer = false) {
-    body.x += body.vx * dt;
+    const dx = body.vx * dt;
+    body.x += dx;
     let wall = false;
+
+    if (isPlayer && dx) {
+      for (const crate of this.crates) {
+        if (!overlaps(body, crate)) continue;
+        const pushed = this.tryPushCrate(crate, dx);
+        if (!pushed || overlaps(body, crate)) {
+          body.x = dx > 0 ? crate.x - body.w : crate.x + crate.w;
+          wall = true;
+        }
+      }
+    }
 
     for (const o of this.nearby(body)) {
       if (o.type === 'platform' || !overlaps(body, o)) continue;
@@ -137,7 +228,57 @@ export class GameEngine {
       }
     }
 
+    if (isPlayer) {
+      for (const crate of this.crates) {
+        if (!overlaps(body, crate)) continue;
+        if (body.vy >= 0 && bottomBefore <= crate.y + 8) {
+          body.y = crate.y - body.h;
+          body.vy = 0;
+          body.grounded = true;
+        } else if (body.vy < 0) {
+          body.y = crate.y + crate.h;
+          body.vy = 0;
+        }
+      }
+    }
+
     return { wall, bottomBefore };
+  }
+
+  moveCrates(dt) {
+    for (const crate of this.crates) {
+      const bottomBefore = crate.y + crate.h;
+      crate.vy = Math.min(900, crate.vy + 1800 * dt);
+      crate.y += crate.vy * dt;
+      crate.grounded = false;
+
+      for (const o of this.nearby(crate)) {
+        if (!overlaps(crate, o) || (o.type === 'platform' && (crate.vy < 0 || bottomBefore > o.y + 1))) continue;
+        if (crate.vy >= 0) {
+          crate.y = o.y - crate.h;
+          crate.vy = 0;
+          crate.grounded = true;
+        } else {
+          crate.y = o.y + o.h;
+          crate.vy = 0;
+        }
+      }
+
+      if (crate.y > this.stage.height * TILE + 100) {
+        crate.x = crate.spawnX;
+        crate.y = crate.spawnY;
+        crate.vy = 0;
+      }
+    }
+  }
+
+  updatePressure() {
+    const plates = this.stage.objects.filter(o => o.type === 'plate');
+    const pressed = plates.some(o => {
+      const pad = { x: o.x * TILE + 3, y: o.y * TILE + 35, w: 42, h: 13 };
+      return overlaps(this.player, pad) || this.crates.some(crate => overlaps(crate, pad));
+    });
+    this.setPressure(pressed);
   }
 
   updateMovingPlatforms(dt) {
@@ -145,13 +286,10 @@ export class GameEngine {
     for (const platform of this.movingPlatforms) {
       platform.prevX = platform.x;
       const range = TILE * 2;
-      platform.x = Math.max(
-        0,
-        Math.min(
-          this.stage.width * TILE - platform.w,
-          platform.baseX + Math.sin(this.time * 1.25) * range
-        )
-      );
+      platform.x = Math.max(0, Math.min(
+        this.stage.width * TILE - platform.w,
+        platform.baseX + Math.sin(this.time * 1.25) * range
+      ));
     }
   }
 
@@ -179,22 +317,6 @@ export class GameEngine {
     }
   }
 
-  setSwitch(on) {
-    this.switchOn = on;
-    for (const o of this.stage.objects.filter(o => o.type === 'switchBlock')) {
-      const key = objectKey(o);
-      if (on) {
-        this.solids.delete(key);
-      } else {
-        this.solids.set(key, { ...o, key, x: o.x * TILE, y: o.y * TILE, w: TILE, h: TILE });
-      }
-    }
-  }
-
-  toggleSwitch() {
-    this.setSwitch(!this.switchOn);
-  }
-
   useWarp(source) {
     if (this.warps.length < 2 || this.warpCooldown > 0) return false;
     const index = this.warps.findIndex(o => o.x === source.x && o.y === source.y);
@@ -209,6 +331,68 @@ export class GameEngine {
     return true;
   }
 
+  updateCannons(dt) {
+    for (const cannon of this.cannons) {
+      cannon.timer -= dt;
+      if (cannon.timer > 0) continue;
+      cannon.timer += 1.65;
+      this.projectiles.push({
+        x: cannon.x + 31,
+        y: cannon.y + 18,
+        w: 15,
+        h: 11,
+        vx: 300
+      });
+    }
+  }
+
+  updateProjectiles(dt) {
+    const next = [];
+
+    projectileLoop:
+    for (const shot of this.projectiles) {
+      shot.x += shot.vx * dt;
+      if (shot.x > this.stage.width * TILE + TILE) continue;
+
+      if (overlaps(shot, this.player)) {
+        this.die();
+        return true;
+      }
+
+      for (const crate of this.crates) {
+        if (!overlaps(shot, crate)) continue;
+        this.tryPushCrate(crate, TILE * .32);
+        continue projectileLoop;
+      }
+
+      for (let i = this.enemies.length - 1; i >= 0; i--) {
+        if (!overlaps(shot, this.enemies[i])) continue;
+        this.enemies.splice(i, 1);
+        this.updateEnemyDoors();
+        continue projectileLoop;
+      }
+
+      for (const o of this.stage.objects) {
+        if (o.type !== 'switch') continue;
+        const button = { x: o.x * TILE + 5, y: o.y * TILE + 22, w: 38, h: 22 };
+        if (!overlaps(shot, button)) continue;
+        this.toggleSwitch();
+        continue projectileLoop;
+      }
+
+      for (const solid of this.nearby(shot)) {
+        if (!overlaps(shot, solid)) continue;
+        if (solid.type === 'breakable') this.breakBlock(solid);
+        continue projectileLoop;
+      }
+
+      next.push(shot);
+    }
+
+    this.projectiles = next;
+    return false;
+  }
+
   step(dt, input) {
     if (this.clear) return;
     const p = this.player;
@@ -217,6 +401,7 @@ export class GameEngine {
     this.warpCooldown = Math.max(0, this.warpCooldown - dt);
     this.updateMovingPlatforms(dt);
     this.carryPlayerWithPlatform();
+    this.moveCrates(dt);
 
     this.buffer = input.jump ? .13 : Math.max(0, this.buffer - dt);
     this.coyote = p.grounded ? .11 : Math.max(0, this.coyote - dt);
@@ -240,13 +425,29 @@ export class GameEngine {
     this.landOnMovingPlatform(movement.bottomBefore);
     if (p.vy >= 0) this.jumpCuttable = false;
 
-    for (const e of this.enemies) {
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const e = this.enemies[i];
       const { wall } = this.move(e, dt, false);
       const ahead = e.vx > 0 ? e.x + e.w + 5 : e.x - 5;
       const support = this.solids.has(`${Math.floor(ahead / TILE)},${Math.floor((e.y + e.h + 5) / TILE)}`);
       if (wall || e.x <= 0 || e.x + e.w >= this.stage.width * TILE || (e.grounded && !support)) e.vx *= -1;
-      if (overlaps(p, e)) return this.die();
+
+      if (!overlaps(p, e)) continue;
+      const stomp = p.vy >= 0 && movement.bottomBefore <= e.y + 10;
+      if (stomp) {
+        this.enemies.splice(i, 1);
+        p.y = e.y - p.h;
+        p.vy = -420;
+        p.grounded = false;
+        this.updateEnemyDoors();
+      } else {
+        return this.die();
+      }
     }
+
+    this.updatePressure();
+    this.updateCannons(dt);
+    if (this.updateProjectiles(dt)) return;
 
     if (p.y > this.stage.height * TILE + 100) return this.die();
 
