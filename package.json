@@ -9,6 +9,7 @@
     "lint": "node scripts/check.js",
     "test": "node --test",
     "preview": "node scripts/serve.js dist",
-    "browser-check": "node scripts/browser-check.js"
+    "browser-check": "node scripts/browser-check.js",
+    "browser-regressions": "node scripts/bug-regressions.js"
   }
 }
