@@ -1,5 +1,22 @@
 /** Versioned, device-independent interchange contract. Coordinates are grid cells. */
-export type PartType = 'ground' | 'block' | 'platform' | 'spring' | 'coin' | 'spike' | 'enemy' | 'checkpoint' | 'goal';
+export type PartType =
+  | 'ground'
+  | 'block'
+  | 'platform'
+  | 'movingPlatform'
+  | 'spring'
+  | 'breakable'
+  | 'key'
+  | 'door'
+  | 'switch'
+  | 'switchBlock'
+  | 'warp'
+  | 'coin'
+  | 'spike'
+  | 'enemy'
+  | 'checkpoint'
+  | 'goal';
+
 export interface GridPosition { x: number; y: number; }
 export interface StageObject extends GridPosition { type: PartType; }
 export interface StageData {
