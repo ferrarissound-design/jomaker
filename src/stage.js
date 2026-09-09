@@ -58,6 +58,14 @@ export function createStage() {
   };
 }
 
+export function resetStageLayout(stage) {
+  const floorY = stage.height - 2;
+  stage.playerStart = { x: 2, y: floorY - 1 };
+  stage.objects = Array.from({ length: stage.width }, (_, x) => ({ type: 'ground', x, y: floorY }))
+    .concat({ type: 'goal', x: Math.min(24, stage.width - 2), y: floorY - 1 });
+  return stage;
+}
+
 export function resizeStage(stage, width) {
   if (!Number.isInteger(width) || width < 10 || width > 300) {
     throw new Error('ステージの長さは10〜300マスで指定してください');

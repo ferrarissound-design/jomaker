@@ -1,10 +1,46 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createStage, StageEditor, StageStore, validateStage, resizeStage } from '../src/stage.js';
+import { createStage, StageEditor, StageStore, validateStage, resizeStage, resetStageLayout } from '../src/stage.js';
 import { GameEngine } from '../src/engine.js';
 import { encodeStage, decodeStage } from '../src/share.js';
 const idle={left:false,right:false,jump:false,jumpHeld:false};
 const advance=(g,n,input=idle)=>{for(let i=0;i<n;i++)g.step(1/120,input);};
+test('reset preserves custom dimensions and metadata, remains saveable and supports undo',()=>{
+  for(const [width,height] of [[20,14],[100,14],[10,8],[300,40]]){
+    const original={...createStage(),width,height,name:'Custom',background:'classic',playerStart:{x:1,y:1},objects:[{type:'coin',x:4,y:2}]};
+    const e=new StageEditor(original);
+    e.change(resetStageLayout);
+    validateStage(e.stage);
+    assert.equal(e.stage.width,width);
+    assert.equal(e.stage.height,height);
+    assert.equal(e.stage.name,'Custom');
+    assert.equal(e.stage.background,'classic');
+    assert.equal(e.stage.objects.filter(o=>o.type==='ground').length,width);
+    assert.equal(e.stage.objects.filter(o=>o.type==='goal').length,1);
+    const memory=new Map(),store=new StageStore({getItem:k=>memory.get(k),setItem:(k,v)=>memory.set(k,v)});
+    store.save(e.stage);
+    assert.deepEqual(store.list()[0].data,e.stage);
+    e.undo();
+    assert.deepEqual(e.stage,original);
+    e.redo();
+    validateStage(e.stage);
+  }
+});
+test('enemies falling out of the stage stop blocking enemy-clear doors',()=>{
+  const s=createStage();
+  s.objects=s.objects.filter(o=>!(o.type==='ground'&&o.x>=6&&o.x<=12));
+  s.objects.push({type:'enemy',x:8,y:11},{type:'enemyDoor',x:14,y:11});
+  const g=new GameEngine(s);
+  assert.equal(g.solids.has('14,11'),true);
+  advance(g,240);
+  assert.equal(g.deaths,0);
+  assert.equal(g.enemies.length,0);
+  assert.equal(g.solids.has('14,11'),false);
+  assert.equal(g.stompSerial,0);
+  g.reset();
+  assert.equal(g.enemies.length,1);
+  assert.equal(g.solids.has('14,11'),true);
+});
 test('placement, unique goal, erase, undo and redo',()=>{const e=new StageEditor(createStage());e.place('enemy',8,11);assert.equal(e.stage.objects.at(-1).type,'enemy');e.place('spike',8,11);assert.equal(e.stage.objects.filter(o=>o.x===8&&o.y===11).length,1);e.undo();assert.equal(e.stage.objects.at(-1).type,'enemy');e.redo();e.place('erase',8,11);assert.ok(!e.stage.objects.some(o=>o.x===8&&o.y===11));e.place('goal',30,11);assert.equal(e.stage.objects.filter(o=>o.type==='goal').length,1);e.place('block',-1,0);validateStage(e.stage);});
 test('stage length expands floors, crops the right edge and is undoable',()=>{const e=new StageEditor(createStage());e.change(s=>resizeStage(s,100));assert.equal(e.stage.width,100);assert.ok(e.stage.objects.some(o=>o.type==='ground'&&o.x===99&&o.y===12));e.stage.objects.push({type:'coin',x:90,y:10});e.change(s=>resizeStage(s,40));assert.equal(e.stage.width,40);assert.ok(e.stage.objects.every(o=>o.x<40));validateStage(e.stage);e.undo();assert.equal(e.stage.width,100);assert.ok(e.stage.objects.some(o=>o.type==='coin'&&o.x===90));});
 test('stage length rejects invalid sizes and cannot cut off the start position',()=>{const s=createStage();assert.throws(()=>resizeStage(s,9),/10〜300/);s.playerStart={x:25,y:11};assert.throws(()=>resizeStage(s,20),/スタート位置/);});

@@ -525,6 +525,12 @@ export class GameEngine {
         if (wall || e.x <= 0 || e.x + e.w >= this.stage.width * TILE || (e.grounded && !support)) e.vx *= -1;
       }
 
+      if (e.y > this.stage.height * TILE + 100) {
+        this.enemies.splice(i, 1);
+        this.updateEnemyDoors();
+        continue;
+      }
+
       if (!overlaps(p, e)) continue;
       const stomp = p.vy >= 0 && movement.bottomBefore <= e.y + 10;
       if (stomp) {
