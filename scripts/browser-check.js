@@ -18,6 +18,7 @@ try {
     await page.locator('[data-tool="pan"]').click();await page.mouse.move(bounds.x+width*.65,bounds.y+80);await page.mouse.down();await page.mouse.move(bounds.x+width*.3,bounds.y+80,{steps:10});await page.mouse.up();
     assert.ok(Number(await page.locator('#scroll').inputValue())>0);
     await page.locator('#save').click();
+    await page.locator('#share').click();assert.match(await page.locator('.share-code').inputValue(),/^JO1\./);await page.locator('[data-close]').click();
     const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('jomaker.stages.v1')));assert.equal(stored.length,1);assert.ok(stored[0].data.objects.some(o=>o.type==='enemy'));
     await page.screenshot({path:`artifacts/${name}-editor.png`});
     await page.locator('#play').click();await page.keyboard.down('KeyD');await page.keyboard.press('Space');await page.waitForTimeout(150);await page.keyboard.up('KeyD');
