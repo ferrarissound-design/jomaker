@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "name": "ジョーメーカー・ギミック街道",
-  "width": 72,
+  "name": "ジョーメーカー・連鎖実験場",
+  "width": 96,
   "height": 14,
   "playerStart": {
     "x": 2,
@@ -354,11 +354,6 @@
       "y": 12
     },
     {
-      "type": "goal",
-      "x": 66,
-      "y": 11
-    },
-    {
       "type": "key",
       "x": 4,
       "y": 11
@@ -482,6 +477,181 @@
       "type": "coin",
       "x": 64,
       "y": 10
+    },
+    {
+      "type": "ground",
+      "x": 72,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 73,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 74,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 75,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 76,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 77,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 78,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 79,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 80,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 81,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 82,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 83,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 84,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 85,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 86,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 87,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 88,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 89,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 90,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 91,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 92,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 93,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 94,
+      "y": 12
+    },
+    {
+      "type": "ground",
+      "x": 95,
+      "y": 12
+    },
+    {
+      "type": "crate",
+      "x": 70,
+      "y": 11
+    },
+    {
+      "type": "plate",
+      "x": 73,
+      "y": 11
+    },
+    {
+      "type": "pressureBlock",
+      "x": 76,
+      "y": 11
+    },
+    {
+      "type": "coin",
+      "x": 74,
+      "y": 9
+    },
+    {
+      "type": "cannon",
+      "x": 79,
+      "y": 11
+    },
+    {
+      "type": "breakable",
+      "x": 82,
+      "y": 11
+    },
+    {
+      "type": "enemy",
+      "x": 85,
+      "y": 11
+    },
+    {
+      "type": "enemy",
+      "x": 87,
+      "y": 11
+    },
+    {
+      "type": "enemyDoor",
+      "x": 89,
+      "y": 11
+    },
+    {
+      "type": "checkpoint",
+      "x": 90,
+      "y": 11
+    },
+    {
+      "type": "goal",
+      "x": 92,
+      "y": 11
     }
   ]
 }
