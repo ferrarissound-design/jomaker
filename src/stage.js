@@ -40,6 +40,26 @@ export const PART_DEFAULTS = {
 export const clone = value => structuredClone(value);
 export const defaultPropsFor = type => clone(PART_DEFAULTS[type] ?? {});
 
+export function gridLine(from, to) {
+  const cells = [];
+  const dx = Math.abs(to.x - from.x), dy = Math.abs(to.y - from.y);
+  const sx = from.x < to.x ? 1 : -1, sy = from.y < to.y ? 1 : -1;
+  let x = from.x, y = from.y, error = dx - dy;
+  for (;;) {
+    cells.push({ x, y });
+    if (x === to.x && y === to.y) return cells;
+    const twice = error * 2;
+    if (twice > -dy) { error -= dy; x += sx; }
+    if (twice < dx) { error += dx; y += sy; }
+  }
+}
+
+export function createStageId() {
+  const secureId = globalThis.crypto?.randomUUID?.();
+  if (secureId) return secureId;
+  return `jomaker-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function newObject(type, x, y) {
   const props = defaultPropsFor(type);
   return Object.keys(props).length ? { type, x, y, props } : { type, x, y };
@@ -249,8 +269,9 @@ export class StageEditor {
 }
 
 export class StageStore {
-  constructor(storage = localStorage) {
+  constructor(storage = localStorage, idFactory = createStageId) {
     this.storage = storage;
+    this.idFactory = idFactory;
     this.key = 'jomaker.stages.v1';
     this.draftKey = 'jomaker.draft.v1';
   }
@@ -273,7 +294,7 @@ export class StageStore {
     const previous = rows.find(r => r.id === id);
     const now = new Date().toISOString();
     const row = {
-      id: previous?.id ?? crypto.randomUUID(),
+      id: previous?.id ?? this.idFactory(),
       name: stage.name,
       createdAt: previous?.createdAt ?? now,
       updatedAt: now,
@@ -316,8 +337,13 @@ export class StageStore {
     return clone(draft);
   }
 
-  clearDraft() {
+  clearDraft(stageId) {
+    if (arguments.length) {
+      const draft = this.loadDraft();
+      if (!draft || draft.stageId !== stageId) return false;
+    }
     if (typeof this.storage.removeItem === 'function') this.storage.removeItem(this.draftKey);
     else this.storage.setItem(this.draftKey, '');
+    return true;
   }
 }

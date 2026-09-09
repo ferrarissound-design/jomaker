@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createStage, StageEditor, StageStore, validateStage, resizeStage, resetStageLayout } from '../src/stage.js';
+import { createStage, createStageId, gridLine, StageEditor, StageStore, validateStage, resizeStage, resetStageLayout } from '../src/stage.js';
 import { GameEngine } from '../src/engine.js';
 import { encodeStage, decodeStage } from '../src/share.js';
 const idle={left:false,right:false,jump:false,jumpHeld:false};
@@ -47,6 +47,8 @@ test('stage length rejects invalid sizes and cannot cut off the start position',
 
 test('multiple stages survive serialization, updates preserve creation and delete',()=>{const memory=new Map();const storage={getItem:k=>memory.get(k),setItem:(k,v)=>memory.set(k,v)};const store=new StageStore(storage);const first=store.save(createStage());const second=store.save({...createStage(),name:'Second'});const date=store.list().find(r=>r.id===first).createdAt;store.save({...createStage(),name:'Changed'},first);assert.equal(store.list().length,2);assert.equal(store.list()[0].createdAt,date);assert.equal(new StageStore(storage).list()[0].name,'Changed');store.remove(second);assert.equal(store.list().length,1);});
 test('editor drafts round-trip, retain stage ids and can be cleared',()=>{const memory=new Map();const storage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)};const store=new StageStore(storage),stage=createStage();stage.name='復旧する冒険';const draft=store.saveDraft(stage,'stage-1');assert.equal(draft.stageId,'stage-1');assert.equal(store.loadDraft().data.name,'復旧する冒険');assert.equal(store.loadDraft().stageId,'stage-1');store.clearDraft();assert.equal(store.loadDraft(),null);});
+test('saving another stage cannot clear a different recovery draft',()=>{const memory=new Map();const storage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)};const store=new StageStore(storage),stage=createStage();store.saveDraft(stage,'stage-a');assert.equal(store.clearDraft('stage-b'),false);assert.equal(store.loadDraft().stageId,'stage-a');assert.equal(store.clearDraft('stage-a'),true);assert.equal(store.loadDraft(),null);});
+test('stage ids support environments without crypto.randomUUID',()=>{const id=createStageId();assert.equal(typeof id,'string');assert.ok(id.length>8);const memory=new Map(),storage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,v)};const store=new StageStore(storage,()=> 'fallback-id');assert.equal(store.save(createStage()),'fallback-id');});
 test('malformed drafts are rejected without touching saved stages',()=>{const memory=new Map();const storage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)};const store=new StageStore(storage);const saved=store.save(createStage());memory.set(store.draftKey,'{broken');assert.throws(()=>store.loadDraft(),/下書き/);assert.equal(store.list()[0].id,saved);});
 
 test('storage failures propagate without replacing editor data',()=>{const s=createStage();const store=new StageStore({getItem:()=>null,setItem:()=>{throw new Error('quota');}});assert.throws(()=>store.save(s),/quota/);assert.equal(s.name,'名前のない冒険');});
@@ -59,6 +61,7 @@ test('coyote time and buffered landing jump',()=>{const g=new GameEngine(createS
 test('reject malformed and overlapping stage objects',()=>{const s=createStage();s.objects.push({...s.objects[0]});assert.throws(()=>validateStage(s));assert.throws(()=>validateStage({...createStage(),width:100000}));});
 
 test('drag stroke is grouped into one undo operation',()=>{const e=new StageEditor(createStage());e.beginStroke();e.strokePlace('block',30,11);e.strokePlace('block',31,11);e.strokePlace('block',32,11);assert.equal(e.endStroke(),true);assert.equal(e.undoStack.length,1);assert.ok(e.stage.objects.some(o=>o.x===31&&o.y===11&&o.type==='block'));e.undo();assert.ok(!e.stage.objects.some(o=>[30,31,32].includes(o.x)&&o.y===11&&o.type==='block'));});
+test('fast drag paths interpolate every crossed grid cell',()=>{assert.deepEqual(gridLine({x:2,y:3},{x:6,y:3}),[{x:2,y:3},{x:3,y:3},{x:4,y:3},{x:5,y:3},{x:6,y:3}]);const diagonal=gridLine({x:2,y:2},{x:5,y:5});assert.deepEqual(diagonal,[{x:2,y:2},{x:3,y:3},{x:4,y:4},{x:5,y:5}]);});
 
 test('short jump cuts upward speed while held jump stays tall',()=>{const held=new GameEngine(createStage()),cut=new GameEngine(createStage());advance(held,60);advance(cut,60);held.step(1/120,{...idle,jump:true,jumpHeld:true});cut.step(1/120,{...idle,jump:true,jumpHeld:true});held.step(1/120,{...idle,jumpHeld:true});cut.step(1/120,idle);assert.ok(cut.player.vy>held.player.vy+200);});
 
