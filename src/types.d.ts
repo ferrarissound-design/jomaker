@@ -16,6 +16,8 @@ export type PartType =
   | 'pressureBlock'
   | 'cannon'
   | 'enemyDoor'
+  | 'timerSwitch'
+  | 'timerBlock'
   | 'coin'
   | 'spike'
   | 'enemy'
