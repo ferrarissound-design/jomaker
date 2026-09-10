@@ -1,0 +1,101 @@
+/* Focus the play view on the game itself. The editor keeps the denser toolbar. */
+.workspace.playing{position:relative;background:#9edff2}
+.workspace.playing .toolbar{
+  position:absolute;
+  top:calc(env(safe-area-inset-top) + 7px);
+  left:calc(env(safe-area-inset-left) + 8px);
+  right:calc(env(safe-area-inset-right) + 8px);
+  z-index:7;
+  padding:0;
+  background:transparent;
+  pointer-events:none;
+  gap:7px;
+}
+.workspace.playing .toolbar button,
+.workspace.playing .toolbar strong,
+.workspace.playing .toolbar .mode{pointer-events:auto;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+.workspace.playing .toolbar button{
+  min-height:40px;
+  padding:7px 11px;
+  border:1px solid #ffffff9e;
+  border-radius:16px;
+  background:#fffdf2d9;
+  box-shadow:0 5px 18px #183b4317;
+}
+.workspace.playing .toolbar strong{
+  max-width:min(42vw,430px);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  padding:7px 11px;
+  border-radius:14px;
+  background:#fffdf2ba;
+  font-size:12px;
+}
+.workspace.playing .toolbar .mode{
+  padding:6px 9px;
+  border-radius:12px;
+  background:#f6f5efb5;
+  color:#4f746e;
+}
+.workspace.playing .viewport{flex:1}
+.workspace.playing .play-top-ui{top:58px;left:10px;right:10px;gap:5px}
+.workspace.playing .play-top-ui .hud,
+.workspace.playing .play-top-ui .hint,
+.workspace.playing .play-top-ui .portrait{
+  background:#fffdf2c9;
+  border:1px solid #ffffff80;
+  box-shadow:0 4px 16px #173a4210;
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
+}
+.workspace.playing .play-top-ui .hud{padding:6px 10px;font-size:11px}
+.workspace.playing .play-top-ui .hint{padding:5px 9px;font-size:10px;opacity:.9}
+.workspace.playing .controls{z-index:5}
+.workspace.playing .controls button{box-shadow:0 5px 0 #27434c22,0 9px 24px #17394418}
+.workspace.playing .controls button:not(.jump){background:#fffdf2d9}
+.workspace.playing .controls .jump{box-shadow:0 5px 0 #ad7a3428,0 9px 24px #17394418}
+
+@media(orientation:portrait){
+  .workspace.playing .toolbar{
+    display:flex;
+    flex-wrap:nowrap;
+    align-items:center;
+    grid-template-columns:none;
+    grid-template-areas:none;
+  }
+  .workspace.playing .toolbar #edit,
+  .workspace.playing .toolbar #pause,
+  .workspace.playing .toolbar #restart{width:42px;min-width:42px;height:42px;padding:0;display:grid;place-items:center}
+  .workspace.playing .toolbar #edit{font-size:0}
+  .workspace.playing .toolbar #edit::before{content:'←';font-size:21px;line-height:1}
+  .workspace.playing .toolbar #restart{font-size:0}
+  .workspace.playing .toolbar #restart::before{content:'↺';font-size:22px;line-height:1}
+  .workspace.playing .toolbar .mode{display:none}
+  .workspace.playing .toolbar strong{
+    display:block;
+    flex:0 1 auto;
+    max-width:45vw;
+    padding:6px 9px;
+    font-size:10px;
+    line-height:1.2;
+  }
+  .workspace.playing .toolbar .spacer{display:block;flex:1}
+  .workspace.playing .play-top-ui{top:57px;left:9px;right:9px;gap:5px}
+  .workspace.playing .play-top-ui .hud{align-self:flex-end;width:auto;max-width:100%;text-align:right;padding:5px 8px;font-size:10px}
+  .workspace.playing .play-top-ui .hint{max-width:72%;padding:5px 8px;font-size:9px}
+  .workspace.playing .play-top-ui .portrait{display:none!important}
+  .workspace.playing .controls{padding:0 11px calc(env(safe-area-inset-bottom) + 10px)}
+  .workspace.playing .controls .move{gap:9px}
+  .workspace.playing .controls button{width:58px;height:55px;font-size:21px;border-radius:17px}
+  .workspace.playing .controls .jump{width:78px;height:78px;font-size:12px}
+}
+
+@media(orientation:landscape) and (max-height:520px){
+  .workspace.playing .toolbar{top:calc(env(safe-area-inset-top) + 5px)}
+  .workspace.playing .toolbar strong{display:none}
+  .workspace.playing .play-top-ui{top:50px}
+  .workspace.playing .play-top-ui .hint{display:none}
+  .workspace.playing .controls button{width:58px;height:52px}
+  .workspace.playing .controls .jump{width:68px;height:68px}
+}

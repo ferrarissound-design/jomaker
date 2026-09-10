@@ -22,6 +22,8 @@ class ThreePlayRenderer {
     this.crateNodes = [];
     this.platformNodes = [];
     this.projectileNodes = [];
+    this.effects = [];
+    this.lastLandingSerial = null;
 
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -52,6 +54,8 @@ class ThreePlayRenderer {
     sun.shadow.camera.bottom = -18;
     sun.shadow.camera.near = 1;
     sun.shadow.camera.far = 55;
+    sun.shadow.bias = -.00045;
+    sun.shadow.normalBias = .025;
     this.sun = sun;
     this.scene.add(sun);
 
@@ -65,6 +69,8 @@ class ThreePlayRenderer {
     this.playerNode = this.makeDinosaur('#82d98a', '#5caf69', 1);
     this.playerNode.position.z = .72;
     this.dynamic.add(this.playerNode);
+    this.playerShadow = this.makeContactShadow();
+    this.dynamic.add(this.playerShadow);
   }
 
   geometry(name, factory) {
@@ -137,6 +143,25 @@ class ThreePlayRenderer {
       this.geometry(key, () => new this.THREE.TorusGeometry(radius, tube, 10, 24)),
       this.material(color)
     );
+  }
+
+  makeContactShadow() {
+    const material = new this.THREE.MeshBasicMaterial({
+      color: 0x244b46,
+      transparent: true,
+      opacity: .2,
+      depthWrite: false
+    });
+    const shadow = this.mesh(
+      this.geometry('contact-shadow', () => new this.THREE.CircleGeometry(.42, 24)),
+      material,
+      false,
+      false
+    );
+    shadow.scale.set(1.05, .3, 1);
+    shadow.renderOrder = 3;
+    shadow.userData.ownedMaterial = material;
+    return shadow;
   }
 
   block(base, top = null) {
@@ -323,9 +348,6 @@ class ThreePlayRenderer {
     const g = new T.Group();
     g.userData.baseScale = scale;
 
-    // Build the dinosaur from overlapping rounded forms so it reads as one
-    // sculpted character instead of a stack of boxes. The groups also give
-    // the walk cycle natural pivots without changing the physics body.
     const tail = this.cone(.22, .78, accentColor, 14);
     tail.rotation.z = Math.PI / 2;
     tail.position.set(-.58, -.01, 0);
@@ -390,8 +412,6 @@ class ThreePlayRenderer {
     const leftLeg = makeLeg(-.18, .14, .07);
     const rightLeg = makeLeg(.13, -.09, .09);
     g.add(leftLeg, rightLeg);
-    g.userData.leftLeg = leftLeg;
-    g.userData.rightLeg = rightLeg;
 
     const arm = new T.Group();
     arm.position.set(.31, .01, .255);
@@ -403,8 +423,6 @@ class ThreePlayRenderer {
     arm.add(upperArm, hand);
     g.add(arm);
 
-    // Small dorsal bumps strengthen the dinosaur silhouette while keeping the
-    // soft low-poly toy look used by the rest of the 2.5D scene.
     const ridgeA = this.sphere(.13, .1, .16, accentColor);
     ridgeA.position.set(-.25, .245, -.03);
     const ridgeB = this.sphere(.12, .095, .15, accentColor);
@@ -413,6 +431,12 @@ class ThreePlayRenderer {
     ridgeC.position.set(.13, .31, -.04);
     g.add(ridgeA, ridgeB, ridgeC);
 
+    g.userData.leftLeg = leftLeg;
+    g.userData.rightLeg = rightLeg;
+    g.userData.tail = tail;
+    g.userData.neck = neck;
+    g.userData.head = head;
+    g.userData.arm = arm;
     g.scale.setScalar(scale);
     return g;
   }
@@ -618,6 +642,10 @@ class ThreePlayRenderer {
     );
   }
 
+  bodyBottom(body) {
+    return this.stage.height - (body.y + body.h) / TILE;
+  }
+
   face(node, vx, fallback = 1) {
     const dir = vx < 0 ? -1 : vx > 0 ? 1 : fallback;
     const s = node.userData.baseScale ?? 1;
@@ -626,16 +654,85 @@ class ThreePlayRenderer {
 
   animateDinosaur(node, time, vx, grounded = true) {
     const running = grounded && Math.abs(vx) > 1;
-    const stride = running ? Math.sin(time * 12) * .28 : 0;
+    const stride = running ? Math.sin(time * 12) * .3 : 0;
+    const idle = Math.sin(time * 2.35);
+    const sway = running ? Math.sin(time * 12 + .8) : idle;
+
     if (node.userData.leftLeg) node.userData.leftLeg.rotation.z = stride;
     if (node.userData.rightLeg) node.userData.rightLeg.rotation.z = -stride;
+    if (node.userData.tail) node.userData.tail.rotation.z = Math.PI / 2 + sway * (running ? .105 : .045);
+    if (node.userData.neck) node.userData.neck.rotation.z = -.16 - stride * .08 + idle * .012;
+    if (node.userData.head) node.userData.head.rotation.z = running ? Math.sin(time * 12 + Math.PI) * .032 : idle * .012;
+    if (node.userData.arm) node.userData.arm.rotation.z = -.5 - stride * .42 + idle * .018;
+
+    if (grounded) node.position.y += running ? Math.abs(Math.sin(time * 12)) * .018 : idle * .009;
     node.rotation.z = grounded ? 0 : -.06 * Math.sign(vx || 1);
+  }
+
+  spawnLandingDust(body, time) {
+    const T = this.THREE;
+    const material = new T.MeshBasicMaterial({
+      color: 0xeaf0d8,
+      transparent: true,
+      opacity: .3,
+      depthWrite: false
+    });
+    const group = new T.Group();
+    const geometry = this.geometry('landing-dust', () => new T.SphereGeometry(.5, 8, 6));
+    for (const [x, y, s] of [[-.23, .015, .12], [0, .04, .15], [.23, .015, .11]]) {
+      const puff = this.mesh(geometry, material, false, false);
+      puff.position.set(x, y, 0);
+      puff.scale.set(s * 1.6, s, s);
+      group.add(puff);
+    }
+    group.position.set((body.x + body.w / 2) / TILE, this.bodyBottom(body) + .035, .78);
+    group.renderOrder = 4;
+    this.dynamic.add(group);
+    this.effects.push({ node: group, material, born: time, baseY: group.position.y });
+  }
+
+  updateEffects(time) {
+    for (let i = this.effects.length - 1; i >= 0; i--) {
+      const effect = this.effects[i];
+      const age = time - effect.born;
+      if (age >= .38) {
+        this.dynamic.remove(effect.node);
+        effect.material.dispose();
+        this.effects.splice(i, 1);
+        continue;
+      }
+      const t = age / .38;
+      effect.node.position.y = effect.baseY + t * .16;
+      const grow = 1 + t * 1.35;
+      effect.node.scale.set(grow, grow, grow);
+      effect.material.opacity = .3 * (1 - t);
+    }
   }
 
   updateDynamic(game, time) {
     this.bodyPosition(this.playerNode, game.player, .72, .07);
     this.face(this.playerNode, game.player.vx, game.player.facing ?? 1);
     this.animateDinosaur(this.playerNode, time, game.player.vx, game.player.grounded);
+
+    this.playerShadow.visible = Boolean(game.player.grounded);
+    if (this.playerShadow.visible) {
+      this.playerShadow.position.set(
+        (game.player.x + game.player.w / 2) / TILE,
+        this.bodyBottom(game.player) + .045,
+        .415
+      );
+      const speedSquash = Math.min(.16, Math.abs(game.player.vx) / (TILE * 16));
+      this.playerShadow.scale.set(1.05 + speedSquash, .3 - speedSquash * .35, 1);
+      this.playerShadow.material.opacity = .2;
+    }
+
+    if (this.lastLandingSerial === null) {
+      this.lastLandingSerial = game.landingSerial;
+    } else if (game.landingSerial !== this.lastLandingSerial) {
+      this.lastLandingSerial = game.landingSerial;
+      if (game.player.grounded) this.spawnLandingDust(game.player, time);
+    }
+    this.updateEffects(time);
 
     this.ensureEnemies(game);
     for (let i = 0; i < game.enemies.length; i++) {
@@ -674,20 +771,27 @@ class ThreePlayRenderer {
     }
   }
 
-  updateCamera(cameraPx, cameraYPx, scale, width, height) {
+  updateCamera(cameraPx, cameraYPx, scale, width, height, player = null) {
     const visibleW = width / scale / TILE;
     const visibleH = height / scale / TILE;
-    const targetX = (cameraPx + width / scale / 2) / TILE;
-    const targetY = this.stage.height - (cameraYPx + height / scale / 2) / TILE;
+    const baseTargetX = (cameraPx + width / scale / 2) / TILE;
+    const baseTargetY = this.stage.height - (cameraYPx + height / scale / 2) / TILE;
+    const portrait = height > width * 1.08;
+    const focusBlend = portrait ? .2 : .08;
+    const playerX = player ? (player.x + player.w / 2) / TILE : baseTargetX;
+    const playerY = player ? this.stage.height - (player.y + player.h / 2) / TILE : baseTargetY;
+    const targetX = baseTargetX * (1 - focusBlend) + playerX * focusBlend;
+    const targetY = baseTargetY * (1 - focusBlend) + playerY * focusBlend;
     const fov = this.camera.fov * Math.PI / 180;
-    const distance = visibleH / (2 * Math.tan(fov / 2));
+    const baseDistance = visibleH / (2 * Math.tan(fov / 2));
+    const distance = Math.max(portrait ? 6.6 : 7.2, baseDistance * (portrait ? .88 : .96));
 
     this.camera.position.set(
-      targetX + visibleW * .055,
-      targetY + visibleH * .075,
-      Math.max(7.5, distance * 1.02)
+      targetX + visibleW * (portrait ? .045 : .055),
+      targetY + visibleH * (portrait ? .055 : .075),
+      distance
     );
-    this.camera.lookAt(targetX, targetY, 0);
+    this.camera.lookAt(targetX, targetY + (portrait ? .02 : 0), .08);
     this.sun.position.set(targetX + 7, targetY + 13, 11);
     this.sun.target.position.set(targetX, targetY, 0);
     if (!this.sun.target.parent) this.scene.add(this.sun.target);
@@ -696,13 +800,22 @@ class ThreePlayRenderer {
   render(game, cameraPx, cameraYPx, scale, width, height, time) {
     this.updateStatic(game, time);
     this.updateDynamic(game, time);
-    this.updateCamera(cameraPx, cameraYPx, scale, width, height);
+    this.updateCamera(cameraPx, cameraYPx, scale, width, height, game?.player);
     this.renderer.render(this.scene, this.camera);
   }
 
   dispose() {
     for (const node of this.enemyNodes) this.releaseDynamicNode(node);
     this.enemyNodes = [];
+    for (const effect of this.effects) {
+      this.dynamic.remove(effect.node);
+      effect.material.dispose();
+    }
+    this.effects = [];
+    if (this.playerShadow?.userData.ownedMaterial) {
+      this.playerShadow.userData.ownedMaterial.dispose();
+      this.playerShadow.userData.ownedMaterial = null;
+    }
     if (this.playerNode?.userData.ownedMaterial) {
       this.playerNode.userData.ownedMaterial.dispose();
       this.playerNode.userData.ownedMaterial = null;
