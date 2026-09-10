@@ -90,7 +90,11 @@ export class GameEngine {
   }
 
   reset(clearCheckpoint = true) {
-    if (clearCheckpoint) this.checkpoint = null;
+    if (clearCheckpoint) {
+      this.checkpoint = null;
+      this.elapsed = 0;
+      this.deaths = 0;
+    }
     const spawn = this.checkpoint ?? this.stage.playerStart;
 
     this.switchOn = false;
@@ -496,6 +500,7 @@ export class GameEngine {
 
   step(dt, input) {
     if (this.clear) return;
+    this.elapsed += dt;
     const p = this.player;
     const jumpHeld = input.jumpHeld ?? input.jump;
 
@@ -641,3 +646,4 @@ export class GameEngine {
     this.reset(false);
   }
 }
+
