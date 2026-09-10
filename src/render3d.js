@@ -323,53 +323,95 @@ class ThreePlayRenderer {
     const g = new T.Group();
     g.userData.baseScale = scale;
 
-    const tail = this.cone(.2, .76, accentColor, 10);
+    // Build the dinosaur from overlapping rounded forms so it reads as one
+    // sculpted character instead of a stack of boxes. The groups also give
+    // the walk cycle natural pivots without changing the physics body.
+    const tail = this.cone(.22, .78, accentColor, 14);
     tail.rotation.z = Math.PI / 2;
-    tail.position.set(-.56, -.02, 0);
+    tail.position.set(-.58, -.01, 0);
     g.add(tail);
 
-    const body = this.sphere(.72, .48, .52, bodyColor);
-    body.position.set(-.08, -.02, 0);
+    const body = this.sphere(.78, .52, .56, bodyColor);
+    body.position.set(-.08, -.01, 0);
     g.add(body);
 
-    const belly = this.sphere(.38, .34, .4, '#dff2c9');
-    belly.position.set(.12, -.08, .19);
+    const belly = this.sphere(.42, .34, .42, '#dff2c9');
+    belly.position.set(.11, -.09, .2);
     g.add(belly);
 
-    const head = this.sphere(.5, .43, .46, bodyColor);
-    head.position.set(.34, .28, 0);
+    const neck = this.sphere(.38, .46, .44, bodyColor);
+    neck.position.set(.2, .18, 0);
+    neck.rotation.z = -.16;
+    g.add(neck);
+
+    const head = this.sphere(.54, .47, .49, bodyColor);
+    head.position.set(.38, .3, 0);
     g.add(head);
 
-    const snout = this.box(.45, .22, .4, bodyColor);
-    snout.position.set(.63, .2, 0);
+    const snout = this.sphere(.5, .27, .41, bodyColor);
+    snout.position.set(.65, .2, 0);
+    snout.rotation.z = -.04;
     g.add(snout);
 
-    const brow = this.box(.26, .07, .42, accentColor);
-    brow.position.set(.43, .43, 0);
-    brow.rotation.z = -.12;
+    const lowerJaw = this.sphere(.42, .15, .36, accentColor);
+    lowerJaw.position.set(.65, .105, 0);
+    lowerJaw.rotation.z = -.025;
+    g.add(lowerJaw);
+
+    const brow = this.sphere(.29, .095, .4, accentColor);
+    brow.position.set(.45, .43, 0);
+    brow.rotation.z = -.16;
     g.add(brow);
 
-    const eye = this.sphere(.075, .09, .055, '#f5d46f');
-    eye.position.set(.48, .34, .25);
-    const pupil = this.sphere(.025, .06, .02, '#273a32');
-    pupil.position.set(.5, .34, .285);
-    g.add(eye, pupil);
+    const eye = this.sphere(.082, .1, .06, '#f5d46f');
+    eye.position.set(.5, .35, .255);
+    const pupil = this.sphere(.03, .064, .023, '#273a32');
+    pupil.position.set(.515, .35, .292);
+    const nostril = this.sphere(.03, .024, .017, '#355348');
+    nostril.position.set(.76, .245, .215);
+    g.add(eye, pupil, nostril);
 
-    // Keep the visual legs inside the player's physics silhouette.
-    // The original long boxes swung past the body on the 2.5D camera,
-    // which made the feet look detached on iPhone portrait layouts.
-    const leftLeg = this.box(.15, .30, .18, accentColor);
-    leftLeg.position.set(-.18, -.29, .14);
-    const rightLeg = this.box(.15, .30, .18, accentColor);
-    rightLeg.position.set(.13, -.29, -.09);
+    const mouth = this.sphere(.3, .025, .025, '#355348');
+    mouth.position.set(.68, .137, .21);
+    mouth.rotation.z = -.02;
+    g.add(mouth);
+
+    const makeLeg = (x, z, footX) => {
+      const leg = new T.Group();
+      leg.position.set(x, -.19, z);
+      const thigh = this.sphere(.19, .3, .2, accentColor);
+      thigh.position.set(0, -.075, 0);
+      const foot = this.sphere(.28, .12, .27, accentColor);
+      foot.position.set(footX, -.215, .025);
+      leg.add(thigh, foot);
+      return leg;
+    };
+
+    const leftLeg = makeLeg(-.18, .14, .07);
+    const rightLeg = makeLeg(.13, -.09, .09);
     g.add(leftLeg, rightLeg);
     g.userData.leftLeg = leftLeg;
     g.userData.rightLeg = rightLeg;
 
-    const arm = this.box(.26, .07, .07, accentColor);
-    arm.position.set(.35, -.02, .25);
-    arm.rotation.z = -.55;
+    const arm = new T.Group();
+    arm.position.set(.31, .01, .255);
+    arm.rotation.z = -.5;
+    const upperArm = this.sphere(.24, .085, .085, accentColor);
+    upperArm.position.x = .08;
+    const hand = this.sphere(.11, .09, .09, accentColor);
+    hand.position.set(.2, -.015, 0);
+    arm.add(upperArm, hand);
     g.add(arm);
+
+    // Small dorsal bumps strengthen the dinosaur silhouette while keeping the
+    // soft low-poly toy look used by the rest of the 2.5D scene.
+    const ridgeA = this.sphere(.13, .1, .16, accentColor);
+    ridgeA.position.set(-.25, .245, -.03);
+    const ridgeB = this.sphere(.12, .095, .15, accentColor);
+    ridgeB.position.set(-.04, .275, -.035);
+    const ridgeC = this.sphere(.1, .085, .14, accentColor);
+    ridgeC.position.set(.13, .31, -.04);
+    g.add(ridgeA, ridgeB, ridgeC);
 
     g.scale.setScalar(scale);
     return g;
