@@ -1,4 +1,4 @@
-import { drawAnimeEnemy } from './anime-enemies.js?v=20260916-enemy-direction-1';
+import { drawAnimeEnemy, ENEMY_VISUAL_WIDTH_TILES } from './anime-enemies.js?v=20260916-enemy-direction-1';
 import { TILE, PARTS } from './stage.js?v=20260916-enemy-direction-1';
 import { drawBackground } from './backgrounds.js?v=20260916-enemy-direction-1';
 
@@ -410,7 +410,7 @@ export function render(ctx, w, h, stage, camera, scale, editing, game, time, sel
       if (e.x > camera - TILE && e.x < camera + w / scale + TILE) {
         const enemyType = e.type ?? 'enemy';
         const flying = enemyType === 'flyingEnemy';
-        const ew = TILE * (flying ? 1.6 : enemyType === 'trikeEnemy' ? 1 : 1.35), eh = ew * 140 / 160;
+        const ew = TILE * (ENEMY_VISUAL_WIDTH_TILES[enemyType] ?? ENEMY_VISUAL_WIDTH_TILES.enemy), eh = ew * 140 / 160;
         const direction = flying ? -1 : (enemyType === 'trikeEnemy' ? e.direction : (e.vx < 0 ? -1 : 1));
         drawAnimeEnemy(ctx, enemyType, e.x + e.w / 2 - ew * (direction < 0 ? .45 : .55),
           flying ? e.y + e.h / 2 - eh * .55 : e.y + e.h - eh * 132 / 140,

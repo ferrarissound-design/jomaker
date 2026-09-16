@@ -1,5 +1,11 @@
 import { TILE } from './stage.js?v=20260916-enemy-direction-1';
 
+export const ENEMY_VISUAL_WIDTH_TILES = Object.freeze({
+  enemy: 1.35,
+  flyingEnemy: 1.6,
+  trikeEnemy: 1.35
+});
+
 // Shared vector artwork for the editor, 2D fallback and WebGL sprite frames.
 // Canvas is 160 x 140; the raptor's planted sole is always at y=132.
 export function paintAnimeEnemy(ctx, type, frame = 0, state = 'walk') {
@@ -124,7 +130,7 @@ export function animateAnimeEnemy(view,node,enemy,time) {
   const flying=enemy.type==='flyingEnemy';
   const direction=flying?-1:enemy.vx<0?-1:enemy.vx>0?1:(node.userData.facing??1);
   node.userData.facing=direction;
-  const width=flying?1.6:enemy.type==='trikeEnemy'?1:1.35;
+  const width=ENEMY_VISUAL_WIDTH_TILES[enemy.type] ?? ENEMY_VISUAL_WIDTH_TILES.enemy;
   // Three.js sprites use scale magnitudes; mirror artwork instead of negative scale.
   node.scale.set(width,width*140/160,1);
   node.center.set(direction<0?.45:.55,flying?.45:1-132/140);
