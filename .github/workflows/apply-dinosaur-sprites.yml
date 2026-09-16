@@ -1,0 +1,166 @@
+name: Apply dinosaur sprite frames
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-dinosaur-sprites.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Replace the player dinosaur with the uploaded walk frames
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          frame_a = '029A536A-CC50-4049-B511-605245126177.png'
+          frame_b = '7B1D2CC0-C6BB-4150-83C2-ACAF5D70B983.png'
+
+          render_path = Path('src/render.js')
+          render = render_path.read_text()
+          if 'PLAYER_WALK_RIGHT_FRAMES' not in render:
+              import_anchor = "import { drawBackground } from './backgrounds.js';\n"
+              assets = f"""
+
+          const PLAYER_WALK_RIGHT_SOURCES = ['./{frame_a}', './{frame_b}'];
+          const PLAYER_WALK_RIGHT_FRAMES = PLAYER_WALK_RIGHT_SOURCES.map(src => {{
+            const image = new Image();
+            image.decoding = 'async';
+            image.src = src;
+            return image;
+          }});
+          """
+              if import_anchor not in render:
+                  raise SystemExit('render.js import anchor not found')
+              render = render.replace(import_anchor, import_anchor + assets, 1)
+
+              old_export = 'export function drawPlayer(ctx, p, time) {'
+              if old_export not in render:
+                  raise SystemExit('drawPlayer function not found')
+              render = render.replace(old_export, 'function drawVectorPlayer(ctx, p, time) {', 1)
+
+              render_anchor = '\nexport function render(ctx, w, h, stage, camera, scale, editing, game, time, selected, cameraY = 0) {'
+              sprite_player = """
+
+          export function drawPlayer(ctx, p, time) {
+            const dir = p.facing ?? (p.vx < 0 ? -1 : 1);
+            const running = p.grounded && Math.abs(p.vx) > 1;
+            const frameIndex = running ? Math.floor(time * 8) % 2 : 0;
+            const frame = PLAYER_WALK_RIGHT_FRAMES[frameIndex];
+
+            if (!frame?.complete || !frame.naturalWidth || !frame.naturalHeight) {
+              drawVectorPlayer(ctx, p, time);
+              return;
+            }
+
+            const bob = running ? Math.abs(Math.sin(time * 16)) * 1.1 : (!p.grounded ? -1.5 : 0);
+            const targetHeight = Math.max(p.h * 1.7, 62);
+            const targetWidth = targetHeight * (frame.naturalWidth / frame.naturalHeight);
+
+            ctx.save();
+            ctx.translate(p.x + p.w / 2, p.y + p.h / 2 + bob);
+            ctx.scale(dir, 1);
+            ctx.drawImage(frame, -targetWidth / 2, -targetHeight * .58, targetWidth, targetHeight);
+            ctx.restore();
+          }
+          """
+              if render_anchor not in render:
+                  raise SystemExit('render() anchor not found')
+              render = render.replace(render_anchor, sprite_player + render_anchor, 1)
+              render_path.write_text(render)
+
+          render3d_path = Path('src/render3d.js')
+          render3d = render3d_path.read_text()
+          old_ctor = """    this.playerNode = this.makeDinosaur('#82d98a', '#5caf69', 1);
+              this.playerNode.position.z = .72;
+              this.dynamic.add(this.playerNode);"""
+          new_ctor = f"""    const playerTextureLoader = new THREE.TextureLoader();
+              this.playerTextures = ['./{frame_a}', './{frame_b}'].map(src => playerTextureLoader.load(src, texture => {{
+                texture.colorSpace = THREE.SRGBColorSpace;
+              }}));
+              const playerMaterial = new THREE.SpriteMaterial({{
+                map: this.playerTextures[0],
+                transparent: true,
+                depthWrite: false,
+                alphaTest: .02,
+                toneMapped: false
+              }});
+              this.playerNode = new THREE.Sprite(playerMaterial);
+              this.playerNode.userData.baseScale = 1.55;
+              this.playerNode.userData.ownedMaterial = playerMaterial;
+              this.playerNode.scale.set(1.55, 1.55, 1);
+              this.playerNode.position.z = .72;
+              this.dynamic.add(this.playerNode);"""
+          if old_ctor in render3d:
+              render3d = render3d.replace(old_ctor, new_ctor, 1)
+          elif 'this.playerTextures' not in render3d:
+              raise SystemExit('render3d.js player constructor anchor not found')
+
+          old_update = """    this.bodyPosition(this.playerNode, game.player, .72, .07);
+              this.face(this.playerNode, game.player.vx, game.player.facing ?? 1);
+              this.animateDinosaur(this.playerNode, time, game.player.vx, game.player.grounded);"""
+          new_update = """    this.bodyPosition(this.playerNode, game.player, .72, .07);
+              const playerFacing = game.player.vx < -.01 ? -1 : game.player.vx > .01 ? 1 : (game.player.facing ?? 1);
+              const playerRunning = game.player.grounded && Math.abs(game.player.vx) > 1;
+              const playerFrame = playerRunning ? Math.floor(time * 8) % 2 : 0;
+              if (this.playerNode.material.map !== this.playerTextures[playerFrame]) {
+                this.playerNode.material.map = this.playerTextures[playerFrame];
+                this.playerNode.material.needsUpdate = true;
+              }
+              const playerScale = this.playerNode.userData.baseScale ?? 1.55;
+              this.playerNode.scale.set(playerScale * (playerFacing < 0 ? -1 : 1), playerScale, 1);"""
+          if old_update in render3d:
+              render3d = render3d.replace(old_update, new_update, 1)
+          elif 'const playerFrame = playerRunning' not in render3d:
+              raise SystemExit('render3d.js player update anchor not found')
+
+          dispose_anchor = """    if (this.playerNode?.userData.ownedMaterial) {
+              this.playerNode.userData.ownedMaterial.dispose();"""
+          if 'for (const texture of this.playerTextures ?? []) texture.dispose();' not in render3d:
+              if dispose_anchor not in render3d:
+                  raise SystemExit('render3d.js dispose anchor not found')
+              render3d = render3d.replace(dispose_anchor, "    for (const texture of this.playerTextures ?? []) texture.dispose();\n" + dispose_anchor, 1)
+          render3d_path.write_text(render3d)
+
+          build_path = Path('scripts/build.js')
+          build = build_path.read_text()
+          build_anchor = "await copyFile('sunrise_at_pixel_peak.mp3','dist/sunrise_at_pixel_peak.mp3');"
+          if frame_a not in build:
+              if build_anchor not in build:
+                  raise SystemExit('build.js audio copy anchor not found')
+              build = build.replace(
+                  build_anchor,
+                  build_anchor + f"\nawait copyFile('{frame_a}','dist/{frame_a}');\nawait copyFile('{frame_b}','dist/{frame_b}');",
+                  1,
+              )
+              build_path.write_text(build)
+          PY
+      - name: Verify
+        run: |
+          npm test
+          npm run lint
+          npm run build
+      - name: Commit the sprite integration
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/render.js src/render3d.js scripts/build.js
+          git commit -m 'Replace player dinosaur with walk sprite frames'
+          git push origin HEAD:main
