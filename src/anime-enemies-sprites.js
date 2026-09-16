@@ -1,13 +1,17 @@
 import { TILE } from './stage.js?v=20260916-enemy-direction-1';
 import {
-  ENEMY_VISUAL_WIDTH_TILES,
+  ENEMY_VISUAL_WIDTH_TILES as BASE_ENEMY_VISUAL_WIDTH_TILES,
   paintAnimeEnemy,
   drawAnimeEnemy as drawBaseAnimeEnemy,
   makeAnimeEnemy as makeBaseAnimeEnemy,
   animateAnimeEnemy as animateBaseAnimeEnemy
 } from './anime-enemies-clean.js?base=20260916-ptero-sprite-1';
 
-export { ENEMY_VISUAL_WIDTH_TILES, paintAnimeEnemy };
+export const ENEMY_VISUAL_WIDTH_TILES = Object.freeze({
+  ...BASE_ENEMY_VISUAL_WIDTH_TILES,
+  flyingEnemy: 1.78
+});
+export { paintAnimeEnemy };
 
 const PTERO_SHEET_SRC = new URL('../F0D64240-49E9-48B3-9979-9D88F4723153.png', import.meta.url).href;
 const COLUMNS = 4;
