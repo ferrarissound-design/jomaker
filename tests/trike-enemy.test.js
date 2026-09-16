@@ -1,11 +1,11 @@
-import '../src/engine-fixes.js?v=20260916-trike-default-left-1';
-import '../src/moving-platform-collision.js?v=20260916-trike-default-left-1';
+import '../src/engine-fixes.js?v=20260916-enemy-direction-1';
+import '../src/moving-platform-collision.js?v=20260916-enemy-direction-1';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { GameEngine } from '../src/engine.js?v=20260916-trike-default-left-1';
-import { createStage, StageEditor, StageStore } from '../src/stage.js?v=20260916-trike-default-left-1';
-import { encodeStage, decodeStage } from '../src/share.js?v=20260916-trike-default-left-1';
-import { moveTrike } from '../src/trike-enemy.js?v=20260916-trike-default-left-1';
+import { GameEngine } from '../src/engine.js?v=20260916-enemy-direction-1';
+import { createStage, StageEditor, StageStore } from '../src/stage.js?v=20260916-enemy-direction-1';
+import { encodeStage, decodeStage } from '../src/share.js?v=20260916-enemy-direction-1';
+import { moveTrike } from '../src/trike-enemy.js?v=20260916-enemy-direction-1';
 const idle={left:false,right:false,jump:false};
 function setup(extra=[]) {
   const s=createStage();s.objects.push({type:'trikeEnemy',x:8,y:11},...extra);

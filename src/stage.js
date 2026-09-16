@@ -34,6 +34,7 @@ export const PARTS = {
 export const PART_DEFAULTS = {
   movingPlatform: { axis: 'x', distance: 2, speed: 1.25 },
   trikeEnemy: { direction: 'left' },
+  enemy: { direction: 'left' },
   cannon: { direction: 'right', interval: 1.65 },
   timerSwitch: { duration: 3.2 },
   warp: { target: '' }
@@ -131,6 +132,10 @@ function validateProps(o) {
     const speed = o.props.speed ?? 1.25;
     if (!['x', 'y'].includes(axis) || !finite(distance) || distance < .5 || distance > 12 ||
         !finite(speed) || speed < .2 || speed > 4) throw new Error('動く足場の設定が正しくありません');
+  }
+  if (o.type === 'enemy') {
+    const direction = o.props.direction ?? 'right';
+    if (!['left', 'right'].includes(direction)) throw new Error('小型肉食恐竜の向きが正しくありません');
   }
   if (o.type === 'trikeEnemy') {
     const direction = o.props.direction ?? 'right';

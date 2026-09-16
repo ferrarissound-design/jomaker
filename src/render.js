@@ -1,6 +1,6 @@
-import { drawAnimeEnemy } from './anime-enemies.js?v=20260916-trike-default-left-1';
-import { TILE, PARTS } from './stage.js?v=20260916-trike-default-left-1';
-import { drawBackground } from './backgrounds.js?v=20260916-trike-default-left-1';
+import { drawAnimeEnemy } from './anime-enemies.js?v=20260916-enemy-direction-1';
+import { TILE, PARTS } from './stage.js?v=20260916-enemy-direction-1';
+import { drawBackground } from './backgrounds.js?v=20260916-enemy-direction-1';
 
 
 const PLAYER_WALK_RIGHT_SOURCES = ['./029A536A-CC50-4049-B511-605245126177.png', './7B1D2CC0-C6BB-4150-83C2-ACAF5D70B983.png'];
