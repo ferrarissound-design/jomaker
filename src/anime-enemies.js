@@ -1,4 +1,4 @@
-import { TILE } from './stage.js?v=20260916-trike-1';
+import { TILE } from './stage.js?v=20260916-trike-direction-1';
 
 // Shared vector artwork for the editor, 2D fallback and WebGL sprite frames.
 // Canvas is 160 x 140; the raptor's planted sole is always at y=132.

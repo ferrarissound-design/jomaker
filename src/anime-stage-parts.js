@@ -1,4 +1,4 @@
-import { ThreePlayRenderer } from './render3d.js?v=20260916-trike-1';
+import { ThreePlayRenderer } from './render3d.js?v=20260916-trike-direction-1';
 
 // Adventure-anime stage skin for the 2.5D play renderer.
 // Keep the already-stylized grass, collectibles, hazards, enemies and portals intact.
