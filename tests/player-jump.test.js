@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ThreePlayRenderer } from '../src/render3d.js?v=20260916-trike-1';
+import { ThreePlayRenderer } from '../src/render3d.js?v=20260916-trike-direction-1';
 
 test('2D player chooses dedicated left artwork without mirroring and keeps fallback',async()=>{
   const previous=globalThis.Image;
   const images=[];
   globalThis.Image=class {constructor(){this.complete=true;this.naturalWidth=this.naturalHeight=1254;images.push(this);}};
   try {
-    const {drawPlayer}=await import('../src/render.js?v=20260916-trike-1');
+    const {drawPlayer}=await import('../src/render.js?v=20260916-trike-direction-1');
     const names={idle:'9914630D',right0:'029A536A',right1:'7B1D2CC0',left0:'594F8DAD',left1:'90285534',jumpRight:'B1003C9C',jumpLeft:'70FE4599'};
     for(const [grounded,vx,facing,time,key,flip] of [
       [true,0,1,0,'idle',1],[true,0,-1,0,'idle',-1],

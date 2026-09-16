@@ -1,5 +1,5 @@
-import { moveTrike, hitTrike } from './trike-enemy.js?v=20260916-trike-1';
-import { TILE, clone, validateStage } from './stage.js?v=20260916-trike-1';
+import { moveTrike, hitTrike } from './trike-enemy.js?v=20260916-trike-direction-1';
+import { TILE, clone, validateStage } from './stage.js?v=20260916-trike-direction-1';
 
 const overlaps = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 const objectKey = o => `${o.x},${o.y}`;
@@ -136,7 +136,7 @@ export class GameEngine {
         : {
             key: objectKey(o),
             type: o.type,
-            ...(o.type === 'trikeEnemy' ? { state: 'walk', direction: 1 } : {}),
+            ...(o.type === 'trikeEnemy' ? { state: 'walk', direction: prop(o, 'direction', 'right') === 'left' ? -1 : 1 } : {}),
             x: o.x * TILE + 7,
             y: o.y * TILE + 12,
             w: 34,
