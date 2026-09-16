@@ -10,6 +10,10 @@ const PLAYER_WALK_RIGHT_FRAMES = PLAYER_WALK_RIGHT_SOURCES.map(src => {
   return image;
 });
 
+const PLAYER_JUMP_FRAME = new Image();
+PLAYER_JUMP_FRAME.decoding = 'async';
+PLAYER_JUMP_FRAME.src = './B1003C9C-4C47-4249-B6A9-1507F723BB9B.png';
+
 export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false, props = null) {
   ctx.save();
   ctx.translate(x, y);
@@ -368,7 +372,7 @@ export function drawPlayer(ctx, p, time) {
   const dir = p.facing ?? (p.vx < 0 ? -1 : 1);
   const running = p.grounded && Math.abs(p.vx) > 1;
   const frameIndex = running ? Math.floor(time * 8) % 2 : 0;
-  const frame = PLAYER_WALK_RIGHT_FRAMES[frameIndex];
+  const frame = !p.grounded ? PLAYER_JUMP_FRAME : PLAYER_WALK_RIGHT_FRAMES[frameIndex];
 
   if (!frame?.complete || !frame.naturalWidth || !frame.naturalHeight) {
     drawVectorPlayer(ctx, p, time);
