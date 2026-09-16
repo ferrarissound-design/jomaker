@@ -1,6 +1,6 @@
-import { makeAnimeEnemy, animateAnimeEnemy } from './anime-enemies.js?v=20260916-trike-default-left-1';
-import { TILE, PARTS } from './stage.js?v=20260916-trike-default-left-1';
-import { initAnimeStyle, makeGrassBlock, buildAnimeBackdrop } from './anime-world.js?v=20260916-trike-default-left-1';
+import { makeAnimeEnemy, animateAnimeEnemy } from './anime-enemies.js?v=20260916-enemy-direction-1';
+import { TILE, PARTS } from './stage.js?v=20260916-enemy-direction-1';
+import { initAnimeStyle, makeGrassBlock, buildAnimeBackdrop } from './anime-world.js?v=20260916-enemy-direction-1';
 
 const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
 let threePromise = null;

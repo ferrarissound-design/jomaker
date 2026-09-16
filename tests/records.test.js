@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { RecordStore, courseKey, formatTime } from '../src/records.js?v=20260916-trike-default-left-1';
-import { GameEngine } from '../src/engine.js?v=20260916-trike-default-left-1';
-import { createStage } from '../src/stage.js?v=20260916-trike-default-left-1';
+import { RecordStore, courseKey, formatTime } from '../src/records.js?v=20260916-enemy-direction-1';
+import { GameEngine } from '../src/engine.js?v=20260916-enemy-direction-1';
+import { createStage } from '../src/stage.js?v=20260916-enemy-direction-1';
 const memory = () => {const data=new Map();return {getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v)};};
 const idle={left:false,right:false,jump:false,jumpHeld:false};
 

@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createStage, createStageId, gridLine, StageEditor, StageStore, validateStage, resizeStage, resetStageLayout } from '../src/stage.js?v=20260916-trike-default-left-1';
-import { GameEngine } from '../src/engine.js?v=20260916-trike-default-left-1';
-import { encodeStage, decodeStage } from '../src/share.js?v=20260916-trike-default-left-1';
+import { createStage, createStageId, gridLine, StageEditor, StageStore, validateStage, resizeStage, resetStageLayout } from '../src/stage.js?v=20260916-enemy-direction-1';
+import { GameEngine } from '../src/engine.js?v=20260916-enemy-direction-1';
+import { encodeStage, decodeStage } from '../src/share.js?v=20260916-enemy-direction-1';
 const idle={left:false,right:false,jump:false,jumpHeld:false};
 const advance=(g,n,input=idle)=>{for(let i=0;i<n;i++)g.step(1/120,input);};
 test('reset preserves custom dimensions and metadata, remains saveable and supports undo',()=>{
@@ -103,3 +103,19 @@ test('moving platform settings control axis distance and speed',()=>{const s=cre
 test('cannon settings control direction and firing interval',()=>{const s=createStage();s.playerStart={x:20,y:11};s.objects.push({type:'cannon',x:10,y:11,props:{direction:'left',interval:.5}});const g=new GameEngine(s);advance(g,50);assert.ok(g.projectiles.some(shot=>shot.vx<0));assert.equal(g.cannons.at(-1).interval,.5);});
 
 test('custom timer duration and explicit warp targets are respected',()=>{const s=createStage();s.objects.push({type:'timerSwitch',x:3,y:11,props:{duration:6}},{type:'warp',x:5,y:11,props:{target:'12,11'}},{type:'warp',x:8,y:11},{type:'warp',x:12,y:11});const g=new GameEngine(s);g.player.x=3*48+10;g.player.y=11*48+8;g.step(1/120,idle);assert.ok(g.timerGate>5.9);g.player.x=5*48+10;g.player.y=11*48+8;g.warpCooldown=0;g.step(1/120,idle);assert.ok(g.player.x>=12*48);});
+
+test('small carnivore defaults left and supports a right-facing initial direction',()=>{
+  const editor=new StageEditor(createStage());editor.place('enemy',8,11);
+  const placed=editor.stage.objects.find(o=>o.type==='enemy');
+  assert.equal(placed.props.direction,'left');
+  for(const [direction,sign] of [['left',-1],['right',1]]) {
+    const stage=structuredClone(editor.stage);stage.objects.find(o=>o.type==='enemy').props.direction=direction;
+    const decoded=decodeStage(encodeStage(stage));const game=new GameEngine(decoded);
+    const enemy=game.enemies.find(e=>e.type==='enemy');const before=enemy.x;game.step(1/120,idle);
+    assert.equal(Math.sign(enemy.vx),sign);assert.equal(Math.sign(enemy.x-before),sign);
+  }
+});
+test('invalid small carnivore directions are rejected',()=>{
+  const stage=createStage();stage.objects.push({type:'enemy',x:8,y:11,props:{direction:'up'}});
+  assert.throws(()=>new GameEngine(stage),/小型肉食恐竜の向き/);
+});

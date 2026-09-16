@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import '../src/engine-fixes.js?v=20260916-trike-default-left-1';
-import { GameEngine } from '../src/engine.js?v=20260916-trike-default-left-1';
-import { createStage } from '../src/stage.js?v=20260916-trike-default-left-1';
+import '../src/engine-fixes.js?v=20260916-enemy-direction-1';
+import { GameEngine } from '../src/engine.js?v=20260916-enemy-direction-1';
+import { createStage } from '../src/stage.js?v=20260916-enemy-direction-1';
 
 const idle = { left: false, right: false, jump: false, jumpHeld: false };
 const advance = (game, frames, input = idle) => {
