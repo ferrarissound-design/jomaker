@@ -1,0 +1,410 @@
+/* JoMaker home screen: match the bright cel-shaded play UI without touching the editor/play layout. */
+#app>.page{
+  position:relative;
+  isolation:isolate;
+  max-width:1180px;
+  min-height:100dvh;
+  padding:34px max(24px,env(safe-area-inset-left)) 44px;
+  color:#173b47;
+}
+
+#app>.page::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  background:
+    radial-gradient(ellipse at 15% 9%,#fff8dd 0 9%,transparent 9.5%),
+    radial-gradient(ellipse at 88% 16%,#fff8dd 0 11%,transparent 11.5%),
+    linear-gradient(180deg,#93e2f2 0 31%,#d9f5f5 31% 44%,#fffaf0 44% 100%);
+  pointer-events:none;
+}
+
+#app>.page::after{
+  content:'';
+  position:fixed;
+  left:0;
+  right:0;
+  top:clamp(250px,36vh,410px);
+  height:110px;
+  z-index:-1;
+  opacity:.5;
+  background:
+    radial-gradient(120px 55px at 8% 100%,#6fbf79 0 64%,transparent 65%),
+    radial-gradient(180px 72px at 34% 100%,#58aa70 0 64%,transparent 65%),
+    radial-gradient(150px 62px at 67% 100%,#72c17e 0 64%,transparent 65%),
+    radial-gradient(180px 75px at 96% 100%,#4c9b67 0 64%,transparent 65%);
+  pointer-events:none;
+}
+
+#app>.page .top{
+  position:relative;
+  z-index:1;
+  padding:12px 14px;
+  border:3px solid #183f4d;
+  border-radius:24px;
+  background:#fff8dd;
+  box-shadow:0 7px 0 #183f4d,0 13px 26px #1739441a,inset 0 3px 0 #fff;
+}
+
+#app>.page .brand{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:4px 10px;
+  font-size:20px;
+  font-weight:950;
+  letter-spacing:.03em;
+  color:#173b47;
+}
+
+#app>.page .brand small{
+  flex-basis:100%;
+  margin-top:0;
+  color:#52757b;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.18em;
+}
+
+#app>.page .top>.tag{
+  padding:7px 11px;
+  border:2px solid #183f4d;
+  border-radius:999px;
+  background:#89ddf2;
+  color:#173b47;
+  font-weight:900;
+  letter-spacing:.04em;
+  box-shadow:0 3px 0 #183f4d,inset 0 2px 0 #ffffffb8;
+}
+
+#app>.page .hero{
+  position:relative;
+  grid-template-columns:minmax(0,1fr) minmax(360px,.86fr);
+  gap:28px;
+  padding:42px 0 46px;
+}
+
+#app>.page .hero>div:first-child{
+  align-self:center;
+  padding:30px 32px 34px;
+  border:3px solid #183f4d;
+  border-radius:30px;
+  background:#fffaf0;
+  box-shadow:0 9px 0 #183f4d,0 18px 34px #17394420,inset 0 3px 0 #fff;
+}
+
+#app>.page .hero>div:first-child>.tag{
+  display:inline-block;
+  padding:6px 10px;
+  border:2px solid #183f4d;
+  border-radius:999px;
+  background:#fff0a9;
+  color:#173b47;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.08em;
+  box-shadow:0 3px 0 #183f4d;
+}
+
+#app>.page .hero h1{
+  margin:17px 0 14px;
+  font-size:clamp(38px,5.2vw,65px);
+  line-height:1.13;
+  letter-spacing:-.065em;
+  color:#173b47;
+  text-shadow:0 2px 0 #fff;
+}
+
+#app>.page .hero h1 em{
+  color:#3f8c69;
+  text-shadow:0 2px 0 #fff;
+}
+
+#app>.page .hero p{
+  margin-bottom:22px;
+  color:#496b70;
+  font-weight:750;
+  line-height:1.75;
+}
+
+#app>.page .hero .actions{
+  gap:11px;
+}
+
+#app>.page .hero .actions button{
+  position:relative;
+  min-height:56px;
+  padding:11px 18px;
+  border:3px solid #183f4d;
+  border-radius:18px;
+  background:#e9fbff;
+  color:#173b47;
+  font-weight:950;
+  box-shadow:0 5px 0 #183f4d,inset 0 3px 0 #fff;
+  transition:transform .07s ease,box-shadow .07s ease,filter .1s ease;
+}
+
+#app>.page .hero .actions button.primary{
+  background:#ffc96f;
+  color:#173b47;
+}
+
+#app>.page .hero .actions button:nth-child(2){background:#dff8ff}
+#app>.page .hero .actions button:nth-child(3){background:#fff3bd}
+
+#app>.page .hero .actions button:active{
+  transform:translateY(4px);
+  box-shadow:0 1px 0 #183f4d,inset 0 2px 0 #fff;
+}
+
+#app>.page .hero-art{
+  position:relative;
+  overflow:hidden;
+  align-self:center;
+  transform:rotate(1.1deg);
+  border:4px solid #183f4d;
+  border-radius:30px;
+  background:#9ee7f4;
+  box-shadow:0 9px 0 #183f4d,0 18px 32px #17394424,inset 0 3px 0 #ffffffb8;
+}
+
+#app>.page .hero-art::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  box-shadow:inset 0 0 0 3px #ffffff52;
+  border-radius:25px;
+}
+
+#app>.page .hero-art canvas{
+  width:100%;
+  min-height:250px;
+  object-fit:cover;
+}
+
+#app>.page .art-label{
+  z-index:2;
+  top:14px;
+  left:14px;
+  padding:8px 12px;
+  border:2px solid #183f4d;
+  border-radius:999px;
+  background:#fff4bd;
+  color:#173b47;
+  font-weight:900;
+  box-shadow:0 3px 0 #183f4d;
+}
+
+#app>.page .draft-card{
+  border:3px solid #183f4d;
+  background:#fff4bd;
+  box-shadow:0 6px 0 #183f4d,0 12px 24px #17394418;
+}
+
+#app>.page .section-title{
+  border-top:0;
+  padding:18px 20px;
+  margin:4px 0 18px;
+  border:3px solid #183f4d;
+  border-radius:22px;
+  background:#89ddf2;
+  box-shadow:0 6px 0 #183f4d,inset 0 3px 0 #ffffff8a;
+}
+
+#app>.page .section-title h2{
+  font-size:22px;
+  font-weight:950;
+  color:#173b47;
+}
+
+#app>.page .section-title .tag{
+  color:#173b47;
+  font-weight:900;
+}
+
+#app>.page .cards{
+  gap:18px;
+}
+
+#app>.page .card,
+#app>.page .empty{
+  border:3px solid #183f4d;
+  border-radius:24px;
+  background:#fffaf0;
+  box-shadow:0 6px 0 #183f4d,0 12px 24px #17394416;
+}
+
+#app>.page .card{
+  padding:15px;
+}
+
+#app>.page .card canvas{
+  border:2px solid #183f4d;
+  border-radius:15px;
+  background:#9ee7f4;
+}
+
+#app>.page .card h3{
+  color:#173b47;
+  font-weight:950;
+}
+
+#app>.page .card p{
+  color:#587378;
+  font-weight:700;
+}
+
+#app>.page .card button{
+  border:2px solid #183f4d;
+  border-radius:13px;
+  box-shadow:0 3px 0 #183f4d;
+  font-weight:900;
+}
+
+#app>.page .card button.primary{
+  background:#ffc96f;
+  color:#173b47;
+}
+
+#app>.page .empty{
+  padding:28px;
+  color:#496b70;
+  font-weight:800;
+  border-style:dashed;
+}
+
+#app>.page .footer{
+  margin-top:36px;
+  padding:16px 18px;
+  border:2px solid #183f4d;
+  border-radius:18px;
+  background:#fff8dd;
+  color:#587378;
+  font-weight:750;
+  text-align:center;
+  box-shadow:0 4px 0 #183f4d;
+}
+
+@media(max-width:650px){
+  #app>.page{
+    padding:18px 14px calc(34px + env(safe-area-inset-bottom));
+  }
+
+  #app>.page::before{
+    background:
+      radial-gradient(ellipse at 14% 12%,#fff8dd 0 8%,transparent 8.6%),
+      radial-gradient(ellipse at 94% 20%,#fff8dd 0 10%,transparent 10.6%),
+      linear-gradient(180deg,#93e2f2 0 38%,#d9f5f5 38% 48%,#fffaf0 48% 100%);
+  }
+
+  #app>.page .top{
+    align-items:center;
+    padding:10px 11px;
+    border-radius:20px;
+    box-shadow:0 5px 0 #183f4d,0 10px 20px #17394416,inset 0 2px 0 #fff;
+  }
+
+  #app>.page .brand{
+    font-size:18px;
+  }
+
+  #app>.page .brand small{
+    font-size:8px;
+    letter-spacing:.13em;
+  }
+
+  #app>.page .top>.tag{
+    max-width:42%;
+    padding:6px 8px;
+    font-size:9px;
+    line-height:1.35;
+    text-align:center;
+  }
+
+  #app>.page .hero{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    padding:24px 0 30px;
+  }
+
+  #app>.page .hero>div:first-child{
+    width:100%;
+    padding:23px 20px 25px;
+    border-radius:24px;
+    box-shadow:0 7px 0 #183f4d,0 13px 25px #1739441c,inset 0 3px 0 #fff;
+  }
+
+  #app>.page .hero h1{
+    margin:14px 0 12px;
+    font-size:clamp(35px,10.2vw,48px);
+    line-height:1.13;
+  }
+
+  #app>.page .hero p{
+    margin-bottom:18px;
+    font-size:14px;
+    line-height:1.7;
+  }
+
+  #app>.page .hero .actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    width:100%;
+    gap:10px;
+  }
+
+  #app>.page .hero .actions button{
+    width:100%;
+    min-height:56px;
+    padding:9px 10px;
+    font-size:14px;
+  }
+
+  #app>.page .hero .actions button.primary{
+    grid-column:1 / -1;
+    min-height:62px;
+    font-size:16px;
+  }
+
+  #app>.page .hero-art{
+    order:-1;
+    width:100%;
+    max-width:none;
+    transform:rotate(-.8deg);
+    border-radius:25px;
+    box-shadow:0 7px 0 #183f4d,0 13px 24px #17394420;
+  }
+
+  #app>.page .hero-art canvas{
+    min-height:0;
+    aspect-ratio:600/370;
+  }
+
+  #app>.page .art-label{
+    top:10px;
+    left:10px;
+    padding:6px 9px;
+    font-size:10px;
+  }
+
+  #app>.page .section-title{
+    padding:14px 15px;
+    border-radius:19px;
+  }
+
+  #app>.page .section-title h2{
+    font-size:18px;
+  }
+
+  #app>.page .section-title .tag{
+    font-size:9px;
+  }
+
+  #app>.page .card,
+  #app>.page .empty{
+    border-radius:20px;
+  }
+}
