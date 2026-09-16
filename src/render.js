@@ -22,6 +22,10 @@ const PLAYER_JUMP_FRAME = new Image();
 PLAYER_JUMP_FRAME.decoding = 'async';
 PLAYER_JUMP_FRAME.src = './B1003C9C-4C47-4249-B6A9-1507F723BB9B.png';
 
+const PLAYER_LEFT_JUMP_FRAME = new Image();
+PLAYER_LEFT_JUMP_FRAME.decoding = 'async';
+PLAYER_LEFT_JUMP_FRAME.src = './70FE4599-3EA7-4DB1-A5DA-43DE8A833E60.png';
+
 const PLAYER_IDLE_FRAME = new Image();
 PLAYER_IDLE_FRAME.decoding = 'async';
 PLAYER_IDLE_FRAME.src = './9914630D-0C2F-469E-B82B-ED918A8EFB35.png';
@@ -312,9 +316,11 @@ export function drawPlayer(ctx, p, time) {
   const dir = p.facing ?? (p.vx < 0 ? -1 : 1);
   const running = p.grounded && Math.abs(p.vx) > 1;
   const walkingLeft = running && dir < 0;
+  const jumpingLeft = !p.grounded && dir < 0;
+  const dedicatedLeft = walkingLeft || jumpingLeft;
   const walkFrames = walkingLeft ? PLAYER_WALK_LEFT_FRAMES : PLAYER_WALK_RIGHT_FRAMES;
   const frameIndex = running ? Math.floor(time * 8) % 2 : 0;
-  const frame = !p.grounded ? PLAYER_JUMP_FRAME
+  const frame = !p.grounded ? (jumpingLeft ? PLAYER_LEFT_JUMP_FRAME : PLAYER_JUMP_FRAME)
     : running ? walkFrames[frameIndex] : PLAYER_IDLE_FRAME;
 
   if (!frame?.complete || !frame.naturalWidth || !frame.naturalHeight) {
@@ -322,14 +328,14 @@ export function drawPlayer(ctx, p, time) {
     return;
   }
 
-  const footY = !p.grounded ? 1155 : running ? (walkingLeft ? [1153, 1135] : [1121, 1157])[frameIndex] : 1193;
+  const footY = !p.grounded ? (jumpingLeft ? 1156 : 1155) : running ? (walkingLeft ? [1153, 1135] : [1121, 1157])[frameIndex] : 1193;
   const targetHeight = Math.max(p.h * 1.7, 62);
   const targetWidth = targetHeight * (frame.naturalWidth / frame.naturalHeight);
 
   ctx.save();
   ctx.translate(p.x + p.w / 2, p.y + p.h);
-  ctx.scale(walkingLeft ? 1 : dir, 1);
-  ctx.drawImage(frame, -targetWidth * (walkingLeft ? .38 : .62), -targetHeight * footY / 1254, targetWidth, targetHeight);
+  ctx.scale(dedicatedLeft ? 1 : dir, 1);
+  ctx.drawImage(frame, -targetWidth * (dedicatedLeft ? .38 : .62), -targetHeight * footY / 1254, targetWidth, targetHeight);
   ctx.restore();
 }
 
