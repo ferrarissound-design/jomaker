@@ -63,6 +63,7 @@ export function paintAnimeEnemy(ctx, type, frame = 0) {
 }
 
 export function drawAnimeEnemy(ctx, type, x, y, width, height, time, direction = 1) {
+  if (type === 'flyingEnemy') direction = -1;
   ctx.save();ctx.translate(x+(direction<0?width:0),y);ctx.scale(direction*width/160,height/140);
   paintAnimeEnemy(ctx,type,Math.floor(time*(type==='flyingEnemy'?8:7))%2);
   ctx.restore();
@@ -72,9 +73,12 @@ export function makeAnimeEnemy(view,type) {
   const T=view.THREE;
   view.enemySpriteTextures ??= new Map();
   if(!view.enemySpriteTextures.has(type)){
-    const frames=[0,1].map(frame=>{
+    const frames=[0,1,2,3].map(index=>{
+      const frame=index%2;
       const c=document.createElement('canvas');c.width=480;c.height=420;
-      const ctx=c.getContext('2d');ctx.scale(3,3);paintAnimeEnemy(ctx,type,frame);
+      const ctx=c.getContext('2d');ctx.scale(3,3);
+      if(index>=2){ctx.translate(160,0);ctx.scale(-1,1);}
+      paintAnimeEnemy(ctx,type,frame);
       const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;
       view.animeTextures.push(t);return t;
     });
@@ -90,12 +94,14 @@ export function makeAnimeEnemy(view,type) {
 
 export function animateAnimeEnemy(view,node,enemy,time) {
   const flying=enemy.type==='flyingEnemy';
-  const direction=enemy.vx<0?-1:enemy.vx>0?1:(node.userData.facing??1);
+  const direction=flying?-1:enemy.vx<0?-1:enemy.vx>0?1:(node.userData.facing??1);
   node.userData.facing=direction;
   const width=flying?1.6:1.35;
-  node.scale.set(width*direction,width*140/160,1);
+  // Three.js sprites use scale magnitudes; mirror artwork instead of negative scale.
+  node.scale.set(width,width*140/160,1);
+  node.center.set(direction<0?.45:.55,flying?.45:1-132/140);
   node.position.set((enemy.x+enemy.w/2)/TILE,
     flying?view.stage.height-(enemy.y+enemy.h/2)/TILE:view.bodyBottom(enemy),.43);
   const moving=flying||(enemy.grounded&&Math.abs(enemy.vx)>1);
-  node.material.map=node.userData.frames[moving?Math.floor(time*(flying?8:7))%2:0];
+  node.material.map=node.userData.frames[(direction<0?2:0)+(moving?Math.floor(time*(flying?8:7))%2:0)];
 }

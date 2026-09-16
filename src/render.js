@@ -1,4 +1,4 @@
-import { drawAnimeEnemy } from './anime-enemies.js';
+import { drawAnimeEnemy } from './anime-enemies.js?v=20260916-facing-1';
 import { TILE, PARTS } from './stage.js';
 import { drawBackground } from './backgrounds.js';
 
@@ -396,7 +396,7 @@ export function render(ctx, w, h, stage, camera, scale, editing, game, time, sel
         const enemyType = e.type ?? 'enemy';
         const flying = enemyType === 'flyingEnemy';
         const ew = TILE * (flying ? 1.6 : 1.35), eh = ew * 140 / 160;
-        const direction = e.vx < 0 ? -1 : 1;
+        const direction = flying || e.vx < 0 ? -1 : 1;
         drawAnimeEnemy(ctx, enemyType, e.x + e.w / 2 - ew * (direction < 0 ? .45 : .55),
           flying ? e.y + e.h / 2 - eh * .55 : e.y + e.h - eh * 132 / 140,
           ew, eh, time, direction);

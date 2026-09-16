@@ -1,4 +1,4 @@
-import { makeAnimeEnemy, animateAnimeEnemy } from './anime-enemies.js';
+import { makeAnimeEnemy, animateAnimeEnemy } from './anime-enemies.js?v=20260916-facing-1';
 import { TILE, PARTS } from './stage.js';
 import { initAnimeStyle, makeGrassBlock, buildAnimeBackdrop } from './anime-world.js';
 

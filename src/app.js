@@ -1,8 +1,8 @@
 import { RecordStore, formatTime } from './records.js';
 import { TILE, PARTS, StageEditor, StageStore, createStage, validateStage, defaultPropsFor, gridLine, resizeStage, resetStageLayout } from './stage.js';
 import { GameEngine } from './engine.js';
-import { render } from './render.js?v=20260916-enemies-1';
-import { createPlayRenderer } from './render3d.js?v=20260916-enemies-1';
+import { render } from './render.js?v=20260916-facing-1';
+import { createPlayRenderer } from './render3d.js?v=20260916-facing-1';
 import { encodeStage, decodeStage } from './share.js';
 import { BACKGROUNDS } from './backgrounds.js';
 const records=new RecordStore();
