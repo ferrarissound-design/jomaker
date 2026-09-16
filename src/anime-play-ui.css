@@ -1,0 +1,148 @@
+/* Anime-inspired play HUD: bold cel-shaded panels, candy accents, and crisp outlines. */
+.workspace.playing .toolbar{
+  gap:8px;
+}
+
+.workspace.playing .toolbar button,
+.workspace.playing .toolbar strong{
+  border:2px solid #183f4d;
+  color:#173b47;
+  box-shadow:0 4px 0 #183f4d, inset 0 2px 0 #ffffffcc;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+
+.workspace.playing .toolbar button{
+  background:#fff8dd;
+  border-radius:17px;
+  font-weight:900;
+  transition:transform .08s ease, box-shadow .08s ease, filter .12s ease;
+}
+
+.workspace.playing .toolbar button:hover{filter:brightness(1.02)}
+.workspace.playing .toolbar button:active{
+  transform:translateY(3px);
+  box-shadow:0 1px 0 #183f4d, inset 0 2px 0 #ffffffcc;
+}
+
+.workspace.playing .toolbar #edit{background:#fff8dd}
+.workspace.playing .toolbar #pause{background:#89ddf2}
+.workspace.playing .toolbar #restart{background:#ffd56f}
+
+.workspace.playing .toolbar strong{
+  position:relative;
+  background:#fff3bd;
+  border-radius:17px;
+  font-weight:950;
+  letter-spacing:.015em;
+  text-shadow:0 1px 0 #fff;
+}
+
+.workspace.playing .toolbar strong::before{
+  content:'★';
+  margin-right:.42em;
+  color:#ff8e39;
+  text-shadow:0 1px 0 #fff, 1px 1px 0 #183f4d;
+}
+
+.workspace.playing .play-top-ui .hud,
+.workspace.playing .play-top-ui .hint{
+  border:2px solid #183f4d;
+  color:#173b47;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  text-shadow:0 1px 0 #fff;
+}
+
+.workspace.playing .play-top-ui .hud{
+  background:#e9fbff;
+  border-radius:18px;
+  box-shadow:0 4px 0 #183f4d, inset 0 2px 0 #fff;
+  font-weight:900;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.015em;
+}
+
+.workspace.playing .play-top-ui .hint{
+  position:relative;
+  background:#fff4bd;
+  border-radius:16px;
+  box-shadow:0 3px 0 #183f4d, inset 0 2px 0 #fff8;
+  font-weight:850;
+  overflow:visible;
+}
+
+.workspace.playing .play-top-ui .hint::before{
+  content:'★';
+  display:inline-block;
+  margin-right:.45em;
+  color:#ff8e39;
+  font-size:.9em;
+}
+
+.workspace.playing .play-top-ui .hint::after{
+  content:'';
+  position:absolute;
+  left:19px;
+  bottom:-8px;
+  width:12px;
+  height:12px;
+  background:#fff4bd;
+  border-right:2px solid #183f4d;
+  border-bottom:2px solid #183f4d;
+  transform:rotate(45deg);
+  z-index:-1;
+}
+
+@media(orientation:portrait){
+  .workspace.playing .toolbar #edit,
+  .workspace.playing .toolbar #pause,
+  .workspace.playing .toolbar #restart{
+    width:46px;
+    min-width:46px;
+    height:46px;
+    border-radius:17px;
+  }
+
+  .workspace.playing .toolbar #edit::before{
+    font-size:23px;
+    font-weight:950;
+  }
+
+  .workspace.playing .toolbar #restart::before{
+    font-size:24px;
+    font-weight:950;
+  }
+
+  .workspace.playing .toolbar strong{
+    max-width:44vw;
+    padding:8px 10px;
+    font-size:11px;
+  }
+
+  .workspace.playing .play-top-ui{
+    top:64px;
+    gap:9px;
+  }
+
+  .workspace.playing .play-top-ui .hud{
+    padding:7px 10px;
+    font-size:10px;
+  }
+
+  .workspace.playing .play-top-ui .hint{
+    max-width:78%;
+    padding:7px 10px;
+    font-size:9px;
+  }
+}
+
+@media(orientation:landscape) and (max-height:520px){
+  .workspace.playing .toolbar button,
+  .workspace.playing .toolbar strong{
+    box-shadow:0 3px 0 #183f4d, inset 0 2px 0 #ffffffcc;
+  }
+
+  .workspace.playing .play-top-ui{top:52px}
+  .workspace.playing .play-top-ui .hint{display:none}
+}
