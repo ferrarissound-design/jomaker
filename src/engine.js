@@ -1,5 +1,5 @@
-import { moveTrike, hitTrike } from './trike-enemy.js?v=20260916-trike-direction-1';
-import { TILE, clone, validateStage } from './stage.js?v=20260916-trike-direction-1';
+import { moveTrike, hitTrike } from './trike-enemy.js?v=20260916-trike-default-left-1';
+import { TILE, clone, validateStage } from './stage.js?v=20260916-trike-default-left-1';
 
 const overlaps = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 const objectKey = o => `${o.x},${o.y}`;

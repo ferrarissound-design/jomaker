@@ -1,5 +1,5 @@
-import { GameEngine } from './engine.js?v=20260916-trike-direction-1';
-import { TILE } from './stage.js?v=20260916-trike-direction-1';
+import { GameEngine } from './engine.js?v=20260916-trike-default-left-1';
+import { TILE } from './stage.js?v=20260916-trike-default-left-1';
 
 const PATCH_FLAG = '__jomakerMovingPlatformCollisionPatched';
 const overlaps = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;

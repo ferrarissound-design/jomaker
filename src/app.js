@@ -1,10 +1,10 @@
-import { RecordStore, formatTime } from './records.js?v=20260916-trike-direction-1';
-import { TILE, PARTS, StageEditor, StageStore, createStage, validateStage, defaultPropsFor, gridLine, resizeStage, resetStageLayout } from './stage.js?v=20260916-trike-direction-1';
-import { GameEngine } from './engine.js?v=20260916-trike-direction-1';
-import { render } from './render.js?v=20260916-trike-direction-1';
-import { createPlayRenderer } from './render3d.js?v=20260916-trike-direction-1';
-import { encodeStage, decodeStage } from './share.js?v=20260916-trike-direction-1';
-import { BACKGROUNDS } from './backgrounds.js?v=20260916-trike-direction-1';
+import { RecordStore, formatTime } from './records.js?v=20260916-trike-default-left-1';
+import { TILE, PARTS, StageEditor, StageStore, createStage, validateStage, defaultPropsFor, gridLine, resizeStage, resetStageLayout } from './stage.js?v=20260916-trike-default-left-1';
+import { GameEngine } from './engine.js?v=20260916-trike-default-left-1';
+import { render } from './render.js?v=20260916-trike-default-left-1';
+import { createPlayRenderer } from './render3d.js?v=20260916-trike-default-left-1';
+import { encodeStage, decodeStage } from './share.js?v=20260916-trike-default-left-1';
+import { BACKGROUNDS } from './backgrounds.js?v=20260916-trike-default-left-1';
 const records=new RecordStore();
 const app=document.querySelector('#app'),store=new StageStore();
 let sampleStage=createStage();

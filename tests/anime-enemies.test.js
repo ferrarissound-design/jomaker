@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { animateAnimeEnemy } from '../src/anime-enemies.js?v=20260916-trike-direction-1';
-import { TILE } from '../src/stage.js?v=20260916-trike-direction-1';
+import { animateAnimeEnemy } from '../src/anime-enemies.js?v=20260916-trike-default-left-1';
+import { TILE } from '../src/stage.js?v=20260916-trike-default-left-1';
 const vector=()=>({set(x,y,z){Object.assign(this,{x,y,z});}});
 test('animated enemies keep collision alignment and preserve their last facing when stopped',()=>{
   const view={stage:{height:16},bodyBottom:e=>16-(e.y+e.h)/TILE};
