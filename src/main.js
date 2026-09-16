@@ -1,4 +1,4 @@
-import './engine-fixes.js?v=20260916-cannon-rider-1';
+import './engine-fixes.js?v=20260916-cannon-side-collision-1';
 import './performance-fixes.js?v=20260916-enemy-direction-1';
 import './anime-stage-parts.js?v=20260916-enemy-direction-1';
 import './moving-platform-polish.js?v=20260916-enemy-direction-1';

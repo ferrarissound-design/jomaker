@@ -10,11 +10,49 @@ const overlaps = (a, b) =>
 // New cannons should face left unless the creator explicitly changes the part setting.
 PART_DEFAULTS.cannon = { ...PART_DEFAULTS.cannon, direction: 'left' };
 
-// Let the player stand on the visible top of cannons without turning the whole
-// cannon tile into a wall. This keeps side/bottom traversal and cannon shots intact.
+// Cannons are one-way from below, but their visible body is solid from the
+// left and right. The player can still land on top without the whole tile
+// becoming a normal solid block.
 const baseMove = GameEngine.prototype.move;
-GameEngine.prototype.move = function moveWithRidableCannons(body, dt, isPlayer = false) {
+GameEngine.prototype.move = function moveWithCannonCollision(body, dt, isPlayer = false) {
+  const startX = body.x;
+  const startY = body.y;
+  const startRight = startX + body.w;
+  const startBottom = startY + body.h;
+  const intendedDx = body.vx * dt;
   const result = baseMove.call(this, body, dt, isPlayer);
+
+  if (isPlayer && intendedDx) {
+    for (const cannon of this.cannons ?? []) {
+      const left = cannon.x;
+      const right = cannon.x + TILE;
+      const top = cannon.y + 13;
+      const bottom = cannon.y + TILE;
+
+      // Side collision only applies when the player was already beside the
+      // visible cannon body. A player descending from above is left alone so
+      // the top-landing logic below can catch them cleanly.
+      const verticalSideOverlap = startBottom > top + 1 && startY < bottom - 1;
+      if (!verticalSideOverlap) continue;
+
+      if (intendedDx > 0) {
+        const crossedLeftSide = startRight <= left + 1 && body.x + body.w > left;
+        const startedInside = startRight > left && startX < right;
+        if (crossedLeftSide || (startedInside && body.x + body.w > left)) {
+          body.x = left - body.w;
+          result.wall = true;
+        }
+      } else {
+        const crossedRightSide = startX >= right - 1 && body.x < right;
+        const startedInside = startRight > left && startX < right;
+        if (crossedRightSide || (startedInside && body.x < right)) {
+          body.x = right;
+          result.wall = true;
+        }
+      }
+    }
+  }
+
   if (!isPlayer || body.vy < 0) return result;
 
   const bottomBefore = result.bottomBefore;
