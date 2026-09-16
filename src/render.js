@@ -384,14 +384,14 @@ export function drawPlayer(ctx, p, time) {
     return;
   }
 
-  const bob = running ? Math.abs(Math.sin(time * 16)) * 1.1 : (!p.grounded ? -1.5 : 0);
+  const footY = !p.grounded ? 1155 : running ? [1121, 1157][frameIndex] : 1193;
   const targetHeight = Math.max(p.h * 1.7, 62);
   const targetWidth = targetHeight * (frame.naturalWidth / frame.naturalHeight);
 
   ctx.save();
-  ctx.translate(p.x + p.w / 2, p.y + p.h / 2 + bob);
+  ctx.translate(p.x + p.w / 2, p.y + p.h);
   ctx.scale(dir, 1);
-  ctx.drawImage(frame, -targetWidth / 2, -targetHeight * .58, targetWidth, targetHeight);
+  ctx.drawImage(frame, -targetWidth * .62, -targetHeight * footY / 1254, targetWidth, targetHeight);
   ctx.restore();
 }
 

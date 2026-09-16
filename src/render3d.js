@@ -9,7 +9,7 @@ export async function createPlayRenderer(canvas, stage) {
   return new ThreePlayRenderer(THREE, canvas, stage);
 }
 
-class ThreePlayRenderer {
+export class ThreePlayRenderer {
   constructor(THREE, canvas, stage) {
     this.THREE = THREE;
     this.stage = stage;
@@ -730,7 +730,12 @@ class ThreePlayRenderer {
   }
 
   updateDynamic(game, time) {
-    this.bodyPosition(this.playerNode, game.player, .72, .07);
+    // Anchor the visible feet to the collision body's bottom, not image center.
+    this.playerNode.position.set(
+      (game.player.x + game.player.w / 2) / TILE,
+      this.bodyBottom(game.player),
+      .42
+    );
     const playerFacing = game.player.vx < -.01 ? -1 : game.player.vx > .01 ? 1 : (game.player.facing ?? 1);
     const playerRunning = game.player.grounded && Math.abs(game.player.vx) > 1;
     const playerFrame = playerRunning ? Math.floor(time * 8) % 2 : 0;
@@ -740,6 +745,10 @@ class ThreePlayRenderer {
       this.playerNode.material.map = playerTexture;
       this.playerNode.material.needsUpdate = true;
     }
+    // Source PNGs have different transparent margins (all are 1254px square).
+    const footY = !game.player.grounded ? 1155
+      : playerRunning ? [1121, 1157][playerFrame] : 1193;
+    this.playerNode.center.set(.62, 1 - footY / 1254);
     const playerScale = this.playerNode.userData.baseScale ?? 1.55;
     this.playerNode.scale.set(playerScale * (playerFacing < 0 ? -1 : 1), playerScale, 1);
 
@@ -783,7 +792,7 @@ class ThreePlayRenderer {
     for (let i = 0; i < game.movingPlatforms.length; i++) {
       const p = game.movingPlatforms[i];
       const node = this.platformNodes[i];
-      node.position.set((p.x + p.w / 2) / TILE, this.stage.height - (p.y + p.h / 2) / TILE, .12);
+      node.position.set((p.x + p.w / 2) / TILE, this.stage.height - p.y / TILE - .5, 0);
     }
 
     this.ensureCount(this.crateNodes, game.crates.length, () => this.makePart('crate'));
