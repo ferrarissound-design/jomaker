@@ -12,7 +12,11 @@ if (!GameEngine.prototype[PATCH_FLAG]) {
 
     const stageW = this.stage.width * TILE;
     const stageH = this.stage.height * TILE;
-    const staticPlatforms = [...(this.solids?.values?.() ?? [])].filter(o => o.type === 'platform');
+
+    // Every active solid is an obstacle for moving platforms. This includes
+    // ground, blocks, one-way platforms, breakables and currently closed gates.
+    const staticObstacles = [...(this.solids?.values?.() ?? [])];
+    const crateObstacles = this.crates ?? [];
     const proposals = new Map();
 
     for (const platform of platforms) {
@@ -43,11 +47,14 @@ if (!GameEngine.prototype[PATCH_FLAG]) {
 
     const bounced = new Set();
 
-    // Moving platforms bounce off normal one-way platforms instead of ghosting through them.
+    // Moving platforms are solid against every static obstacle and pushable box.
+    // On contact they stay at the last safe position and reverse their motion.
     for (const platform of platforms) {
       const next = proposals.get(platform);
       const body = { x: next.x, y: next.y, w: platform.w, h: platform.h };
-      if (staticPlatforms.some(other => overlaps(body, other))) bounced.add(platform);
+      const hitsStatic = staticObstacles.some(other => overlaps(body, other));
+      const hitsCrate = crateObstacles.some(crate => overlaps(body, crate));
+      if (hitsStatic || hitsCrate) bounced.add(platform);
     }
 
     // Resolve moving-platform vs moving-platform collisions from the same predicted frame,
