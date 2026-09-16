@@ -1,4 +1,4 @@
-import { clone, validateStage } from './stage.js';
+import { clone, validateStage } from './stage.js?v=20260916-trike-1';
 
 const PREFIX = 'JO1.';
 

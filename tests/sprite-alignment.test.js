@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ThreePlayRenderer } from '../src/render3d.js';
-import { TILE } from '../src/stage.js';
+import { ThreePlayRenderer } from '../src/render3d.js?v=20260916-trike-1';
+import { TILE } from '../src/stage.js?v=20260916-trike-1';
 const vector = () => ({set(x,y,z){Object.assign(this,{x,y,z});}});
 const node = () => ({position:vector(),scale:vector(),center:vector(),material:{},userData:{baseScale:1.55}});
 test('sprite soles stay on the collision bottom across frames and facing directions',()=>{

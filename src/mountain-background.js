@@ -1,4 +1,4 @@
-import { ThreePlayRenderer } from './render3d.js?v=20260916-left-jump-1';
+import { ThreePlayRenderer } from './render3d.js?v=20260916-trike-1';
 
 const MOUNTAIN_PANORAMA_SRC = './F9F8E7A2-0B27-46F3-BB59-E2E454041170.png';
 const ANIME_TREE_SRC = './03D934FC-EF4D-4FD9-B515-F844476D469E.png';
