@@ -1,2 +1,2 @@
 import './engine-fixes.js';
-import './app.js';
+import './app.js?v=20260916-idle-1';
