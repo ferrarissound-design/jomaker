@@ -1,4 +1,4 @@
-import { TILE } from './stage.js?v=20260916-enemy-direction-1';
+import { TILE, PART_DEFAULTS } from './stage.js?v=20260916-enemy-direction-1';
 import { GameEngine } from './engine.js?v=20260916-enemy-direction-1';
 
 const overlaps = (a, b) =>
@@ -6,6 +6,36 @@ const overlaps = (a, b) =>
   a.x + a.w > b.x &&
   a.y < b.y + b.h &&
   a.y + a.h > b.y;
+
+// New cannons should face left unless the creator explicitly changes the part setting.
+PART_DEFAULTS.cannon = { ...PART_DEFAULTS.cannon, direction: 'left' };
+
+// Let the player stand on the visible top of cannons without turning the whole
+// cannon tile into a wall. This keeps side/bottom traversal and cannon shots intact.
+const baseMove = GameEngine.prototype.move;
+GameEngine.prototype.move = function moveWithRidableCannons(body, dt, isPlayer = false) {
+  const result = baseMove.call(this, body, dt, isPlayer);
+  if (!isPlayer || body.vy < 0) return result;
+
+  const bottomBefore = result.bottomBefore;
+  let supportTop = null;
+
+  for (const cannon of this.cannons ?? []) {
+    const top = cannon.y + 13;
+    const horizontal = body.x < cannon.x + TILE && body.x + body.w > cannon.x;
+    const crossedTop = bottomBefore <= top + 1 && body.y + body.h >= top;
+    if (!horizontal || !crossedTop || body.y >= top) continue;
+    if (supportTop === null || top < supportTop) supportTop = top;
+  }
+
+  if (supportTop !== null) {
+    body.y = supportTop - body.h;
+    body.vy = 0;
+    body.grounded = true;
+  }
+
+  return result;
+};
 
 // Keep timer-block rendering and collision state synchronized. If the timer
 // expires while a body is still inside a timer block, keep every timer block
