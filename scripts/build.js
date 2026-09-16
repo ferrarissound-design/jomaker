@@ -11,4 +11,5 @@ await copyFile('sunrise_at_pixel_peak.mp3','dist/sunrise_at_pixel_peak.mp3');
 await copyFile('029A536A-CC50-4049-B511-605245126177.png','dist/029A536A-CC50-4049-B511-605245126177.png');
 await copyFile('7B1D2CC0-C6BB-4150-83C2-ACAF5D70B983.png','dist/7B1D2CC0-C6BB-4150-83C2-ACAF5D70B983.png');
 await copyFile('B1003C9C-4C47-4249-B6A9-1507F723BB9B.png','dist/B1003C9C-4C47-4249-B6A9-1507F723BB9B.png');
+await copyFile('9914630D-0C2F-469E-B82B-ED918A8EFB35.png','dist/9914630D-0C2F-469E-B82B-ED918A8EFB35.png');
 console.log('Built dist/');

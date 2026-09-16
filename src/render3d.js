@@ -73,6 +73,9 @@ class ThreePlayRenderer {
     this.playerJumpTexture = playerTextureLoader.load('./B1003C9C-4C47-4249-B6A9-1507F723BB9B.png', texture => {
       texture.colorSpace = THREE.SRGBColorSpace;
     });
+    this.playerIdleTexture = playerTextureLoader.load('./9914630D-0C2F-469E-B82B-ED918A8EFB35.png', texture => {
+      texture.colorSpace = THREE.SRGBColorSpace;
+    });
     const playerMaterial = new THREE.SpriteMaterial({
       map: this.playerTextures[0],
       transparent: true,
@@ -731,7 +734,8 @@ class ThreePlayRenderer {
     const playerFacing = game.player.vx < -.01 ? -1 : game.player.vx > .01 ? 1 : (game.player.facing ?? 1);
     const playerRunning = game.player.grounded && Math.abs(game.player.vx) > 1;
     const playerFrame = playerRunning ? Math.floor(time * 8) % 2 : 0;
-    const playerTexture = !game.player.grounded ? this.playerJumpTexture : this.playerTextures[playerFrame];
+    const playerTexture = !game.player.grounded ? this.playerJumpTexture
+      : playerRunning ? this.playerTextures[playerFrame] : this.playerIdleTexture;
     if (this.playerNode.material.map !== playerTexture) {
       this.playerNode.material.map = playerTexture;
       this.playerNode.material.needsUpdate = true;
@@ -847,6 +851,7 @@ class ThreePlayRenderer {
     }
     for (const texture of this.playerTextures) texture.dispose();
     this.playerJumpTexture.dispose();
+    this.playerIdleTexture.dispose();
     for (const material of this.materials.values()) material.dispose();
     for (const geometry of this.geometries.values()) geometry.dispose();
     this.renderer.dispose();

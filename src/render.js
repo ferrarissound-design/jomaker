@@ -14,6 +14,10 @@ const PLAYER_JUMP_FRAME = new Image();
 PLAYER_JUMP_FRAME.decoding = 'async';
 PLAYER_JUMP_FRAME.src = './B1003C9C-4C47-4249-B6A9-1507F723BB9B.png';
 
+const PLAYER_IDLE_FRAME = new Image();
+PLAYER_IDLE_FRAME.decoding = 'async';
+PLAYER_IDLE_FRAME.src = './9914630D-0C2F-469E-B82B-ED918A8EFB35.png';
+
 export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false, props = null) {
   ctx.save();
   ctx.translate(x, y);
@@ -372,7 +376,8 @@ export function drawPlayer(ctx, p, time) {
   const dir = p.facing ?? (p.vx < 0 ? -1 : 1);
   const running = p.grounded && Math.abs(p.vx) > 1;
   const frameIndex = running ? Math.floor(time * 8) % 2 : 0;
-  const frame = !p.grounded ? PLAYER_JUMP_FRAME : PLAYER_WALK_RIGHT_FRAMES[frameIndex];
+  const frame = !p.grounded ? PLAYER_JUMP_FRAME
+    : running ? PLAYER_WALK_RIGHT_FRAMES[frameIndex] : PLAYER_IDLE_FRAME;
 
   if (!frame?.complete || !frame.naturalWidth || !frame.naturalHeight) {
     drawVectorPlayer(ctx, p, time);
