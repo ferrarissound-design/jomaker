@@ -45,12 +45,10 @@ jobs:
               if import_anchor not in render:
                   raise SystemExit('render.js import anchor not found')
               render = render.replace(import_anchor, import_anchor + assets, 1)
-
               old_export = 'export function drawPlayer(ctx, p, time) {'
               if old_export not in render:
                   raise SystemExit('drawPlayer function not found')
               render = render.replace(old_export, 'function drawVectorPlayer(ctx, p, time) {', 1)
-
               render_anchor = '\nexport function render(ctx, w, h, stage, camera, scale, editing, game, time, selected, cameraY = 0) {'
               sprite_player = """
 
@@ -125,13 +123,6 @@ jobs:
               render3d = render3d.replace(old_update, new_update, 1)
           elif 'const playerFrame = playerRunning' not in render3d:
               raise SystemExit('render3d.js player update anchor not found')
-
-          dispose_anchor = """    if (this.playerNode?.userData.ownedMaterial) {
-              this.playerNode.userData.ownedMaterial.dispose();"""
-          if 'for (const texture of this.playerTextures ?? []) texture.dispose();' not in render3d:
-              if dispose_anchor not in render3d:
-                  raise SystemExit('render3d.js dispose anchor not found')
-              render3d = render3d.replace(dispose_anchor, "    for (const texture of this.playerTextures ?? []) texture.dispose();\n" + dispose_anchor, 1)
           render3d_path.write_text(render3d)
 
           build_path = Path('scripts/build.js')
