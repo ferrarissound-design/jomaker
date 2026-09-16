@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { animateAnimeEnemy } from '../src/anime-enemies.js?v=20260916-enemy-direction-1';
+import { animateAnimeEnemy, ENEMY_VISUAL_WIDTH_TILES } from '../src/anime-enemies.js?v=20260916-enemy-direction-1';
 import { TILE } from '../src/stage.js?v=20260916-enemy-direction-1';
 const vector=()=>({set(x,y,z){Object.assign(this,{x,y,z});}});
 test('animated enemies keep collision alignment and preserve their last facing when stopped',()=>{
@@ -33,5 +33,7 @@ test('trike walking and flipped animations use distinct frames in both direction
   e.state='flipped';e.vx=0;animateAnimeEnemy(view,n,e,0);assert.equal(n.material.map,frames[4]);
   animateAnimeEnemy(view,n,e,.15);assert.equal(n.material.map,frames[5]);
   e.state='sliding';e.vx=-290;animateAnimeEnemy(view,n,e,0);assert.equal(n.material.map,frames[6]);
-  assert.equal(n.position.y,baseline);assert.ok(n.scale.x<1.35);
+  assert.equal(n.position.y,baseline);
+  assert.equal(n.scale.x,1.35);
+  assert.equal(ENEMY_VISUAL_WIDTH_TILES.trikeEnemy,ENEMY_VISUAL_WIDTH_TILES.enemy);
 });
