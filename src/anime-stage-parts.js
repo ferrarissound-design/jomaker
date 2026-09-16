@@ -49,20 +49,57 @@ const makeCrackedBlock = view => {
 const makePlatform = (view, moving = false) => {
   const T = view.THREE;
   const group = new T.Group();
-  const base = view.box(.96, .20, .72, moving ? '#d88b49' : '#67ad51');
-  base.position.y = .35;
-  group.add(base);
-  const cap = view.box(.90, .075, .76, moving ? '#ffd178' : '#b8ea75');
+
+  // Keep the collision footprint unchanged, but flatten the visual depth and
+  // build the ledge out of bold cel-shaded layers so it reads like the HUD art.
+  const bodyColor = moving ? '#d98649' : '#4f9148';
+  const shadowColor = moving ? '#86533e' : '#285f43';
+  const faceColor = moving ? '#f2a85b' : '#69b951';
+  const topColor = moving ? '#ffd36f' : '#a9dc55';
+  const shineColor = moving ? '#fff0ad' : '#d9f27b';
+
+  const shadow = view.box(.94, .15, .58, shadowColor);
+  shadow.position.set(0, .255, -.015);
+  group.add(shadow);
+
+  const body = view.box(.98, .19, .64, bodyColor);
+  body.position.y = .34;
+  group.add(body);
+
+  const face = view.box(.88, .075, .035, faceColor);
+  face.position.set(0, .345, .342);
+  group.add(face);
+
+  const cap = view.box(1.02, .095, .69, topColor);
   cap.position.y = .485;
   group.add(cap);
-  const trim = view.box(.62, .045, .035, moving ? '#7c5741' : '#35694b');
-  trim.position.set(0, .30, .375);
-  group.add(trim);
-  if (moving) {
-    const badge = view.box(.24, .09, .04, '#fff0bd');
-    badge.position.set(0, .29, .40);
+
+  const highlight = view.box(.72, .028, .03, shineColor);
+  highlight.position.set(-.055, .523, .365);
+  group.add(highlight);
+
+  // Hand-drawn style grass tufts make repeated tiles feel like one illustrated
+  // ledge instead of a row of plain 3D slabs.
+  if (!moving) {
+    const blade = (x, angle, h) => {
+      const leaf = view.box(.055, h, .045, '#79bd49');
+      leaf.position.set(x, .565, .24);
+      leaf.rotation.z = angle;
+      group.add(leaf);
+    };
+    blade(-.33, -.32, .17);
+    blade(-.24, .23, .13);
+    blade(.33, .28, .15);
+  } else {
+    const badge = view.box(.30, .09, .04, '#fff4c8');
+    badge.position.set(0, .35, .365);
     group.add(badge);
+    const arrow = view.box(.13, .035, .045, '#9b613f');
+    arrow.position.set(0, .35, .392);
+    arrow.rotation.z = -.08;
+    group.add(arrow);
   }
+
   return group;
 };
 
