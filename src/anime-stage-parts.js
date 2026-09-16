@@ -46,41 +46,31 @@ const makeCrackedBlock = view => {
   return group;
 };
 
-const makePlatform = (view, moving = false) => {
+const makePlatform = (view, moving = false, props = null) => {
   const T = view.THREE;
   const group = new T.Group();
 
-  // Keep the collision footprint unchanged, but flatten the visual depth and
-  // build the ledge out of bold cel-shaded layers so it reads like the HUD art.
-  const bodyColor = moving ? '#d98649' : '#4f9148';
-  const shadowColor = moving ? '#86533e' : '#285f43';
-  const faceColor = moving ? '#f2a85b' : '#69b951';
-  const topColor = moving ? '#ffd36f' : '#a9dc55';
-  const shineColor = moving ? '#fff0ad' : '#d9f27b';
-
-  const shadow = view.box(.94, .15, .58, shadowColor);
-  shadow.position.set(0, .255, -.015);
-  group.add(shadow);
-
-  const body = view.box(.98, .19, .64, bodyColor);
-  body.position.y = .34;
-  group.add(body);
-
-  const face = view.box(.88, .075, .035, faceColor);
-  face.position.set(0, .345, .342);
-  group.add(face);
-
-  const cap = view.box(1.02, .095, .69, topColor);
-  cap.position.y = .485;
-  group.add(cap);
-
-  const highlight = view.box(.72, .028, .03, shineColor);
-  highlight.position.set(-.055, .523, .365);
-  group.add(highlight);
-
-  // Hand-drawn style grass tufts make repeated tiles feel like one illustrated
-  // ledge instead of a row of plain 3D slabs.
   if (!moving) {
+    const shadow = view.box(.94, .15, .58, '#285f43');
+    shadow.position.set(0, .255, -.015);
+    group.add(shadow);
+
+    const body = view.box(.98, .19, .64, '#4f9148');
+    body.position.y = .34;
+    group.add(body);
+
+    const face = view.box(.88, .075, .035, '#69b951');
+    face.position.set(0, .345, .342);
+    group.add(face);
+
+    const cap = view.box(1.02, .095, .69, '#a9dc55');
+    cap.position.y = .485;
+    group.add(cap);
+
+    const highlight = view.box(.72, .028, .03, '#d9f27b');
+    highlight.position.set(-.055, .523, .365);
+    group.add(highlight);
+
     const blade = (x, angle, h) => {
       const leaf = view.box(.055, h, .045, '#79bd49');
       leaf.position.set(x, .565, .24);
@@ -90,14 +80,60 @@ const makePlatform = (view, moving = false) => {
     blade(-.33, -.32, .17);
     blade(-.24, .23, .13);
     blade(.33, .28, .15);
-  } else {
-    const badge = view.box(.30, .09, .04, '#fff4c8');
-    badge.position.set(0, .35, .365);
-    group.add(badge);
-    const arrow = view.box(.13, .035, .045, '#9b613f');
-    arrow.position.set(0, .35, .392);
-    arrow.rotation.z = -.08;
-    group.add(arrow);
+    return group;
+  }
+
+  // Moving platforms share the grassland palette with normal ledges, while a
+  // bright mechanical band and bold chevrons make their motion readable at a glance.
+  const shadow = view.box(.96, .16, .59, '#214f4b');
+  shadow.position.set(0, .25, -.02);
+  group.add(shadow);
+
+  const body = view.box(.99, .20, .65, '#3f806f');
+  body.position.y = .34;
+  group.add(body);
+
+  const lowerLip = view.box(.88, .055, .035, '#2d655d');
+  lowerLip.position.set(0, .285, .345);
+  group.add(lowerLip);
+
+  const cap = view.box(1.04, .10, .70, '#a9dc55');
+  cap.position.y = .49;
+  group.add(cap);
+
+  const grassHighlight = view.box(.74, .028, .03, '#dff58b');
+  grassHighlight.position.set(-.045, .53, .37);
+  group.add(grassHighlight);
+
+  const motionBand = view.box(.72, .105, .045, '#ffd36f');
+  motionBand.position.set(0, .36, .365);
+  group.add(motionBand);
+
+  const motionBandInner = view.box(.62, .052, .047, '#fff1ac');
+  motionBandInner.position.set(0, .372, .39);
+  group.add(motionBandInner);
+
+  const arrowGroup = new T.Group();
+  const makeChevron = (x, dir) => {
+    const upper = view.box(.16, .038, .05, '#173b47');
+    upper.position.set(x, .02, 0);
+    upper.rotation.z = dir * .62;
+    const lower = view.box(.16, .038, .05, '#173b47');
+    lower.position.set(x, -.055, 0);
+    lower.rotation.z = -dir * .62;
+    arrowGroup.add(upper, lower);
+  };
+  makeChevron(-.19, -1);
+  makeChevron(.19, 1);
+  arrowGroup.position.set(0, .37, .42);
+  if (props?.axis === 'y') arrowGroup.rotation.z = Math.PI / 2;
+  group.add(arrowGroup);
+
+  // Small end-caps keep the platform looking illustrated rather than like a drawer.
+  for (const x of [-.43, .43]) {
+    const rivet = view.sphere(.045, .045, .035, '#fff3c4');
+    rivet.position.set(x, .36, .405);
+    group.add(rivet);
   }
 
   return group;
@@ -242,8 +278,8 @@ ThreePlayRenderer.prototype.makePart = function makeAnimeStagePart(type, props =
   if (type === 'pressureBlock') return makeAdventureBlock(this, '#65a9b9', '#a8e3e8', '#477783');
   if (type === 'timerBlock') return makeAdventureBlock(this, '#c68b55', '#f5c985', '#8c5c3e');
   if (type === 'breakable') return makeCrackedBlock(this);
-  if (type === 'platform') return makePlatform(this, false);
-  if (type === 'movingPlatform') return makePlatform(this, true);
+  if (type === 'platform') return makePlatform(this, false, props);
+  if (type === 'movingPlatform') return makePlatform(this, true, props);
   if (type === 'crate') return makeAnimeCrate(this);
   if (type === 'plate') return makePressurePlate(this);
   if (type === 'cannon') return makeCartoonCannon(this, props);
