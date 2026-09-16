@@ -11,6 +11,13 @@ const PLAYER_WALK_RIGHT_FRAMES = PLAYER_WALK_RIGHT_SOURCES.map(src => {
   return image;
 });
 
+const PLAYER_WALK_LEFT_FRAMES = ['./594F8DAD-DC51-4DFF-9AC3-784FCB70FF74.png', './90285534-ECDC-4BA6-96D4-BBA630AE34B7.png'].map(src => {
+  const image = new Image();
+  image.decoding = 'async';
+  image.src = src;
+  return image;
+});
+
 const PLAYER_JUMP_FRAME = new Image();
 PLAYER_JUMP_FRAME.decoding = 'async';
 PLAYER_JUMP_FRAME.src = './B1003C9C-4C47-4249-B6A9-1507F723BB9B.png';
@@ -304,23 +311,25 @@ function drawVectorPlayer(ctx, p, time) {
 export function drawPlayer(ctx, p, time) {
   const dir = p.facing ?? (p.vx < 0 ? -1 : 1);
   const running = p.grounded && Math.abs(p.vx) > 1;
+  const walkingLeft = running && dir < 0;
+  const walkFrames = walkingLeft ? PLAYER_WALK_LEFT_FRAMES : PLAYER_WALK_RIGHT_FRAMES;
   const frameIndex = running ? Math.floor(time * 8) % 2 : 0;
   const frame = !p.grounded ? PLAYER_JUMP_FRAME
-    : running ? PLAYER_WALK_RIGHT_FRAMES[frameIndex] : PLAYER_IDLE_FRAME;
+    : running ? walkFrames[frameIndex] : PLAYER_IDLE_FRAME;
 
   if (!frame?.complete || !frame.naturalWidth || !frame.naturalHeight) {
     drawVectorPlayer(ctx, p, time);
     return;
   }
 
-  const footY = !p.grounded ? 1155 : running ? [1121, 1157][frameIndex] : 1193;
+  const footY = !p.grounded ? 1155 : running ? (walkingLeft ? [1153, 1135] : [1121, 1157])[frameIndex] : 1193;
   const targetHeight = Math.max(p.h * 1.7, 62);
   const targetWidth = targetHeight * (frame.naturalWidth / frame.naturalHeight);
 
   ctx.save();
   ctx.translate(p.x + p.w / 2, p.y + p.h);
-  ctx.scale(dir, 1);
-  ctx.drawImage(frame, -targetWidth * .62, -targetHeight * footY / 1254, targetWidth, targetHeight);
+  ctx.scale(walkingLeft ? 1 : dir, 1);
+  ctx.drawImage(frame, -targetWidth * (walkingLeft ? .38 : .62), -targetHeight * footY / 1254, targetWidth, targetHeight);
   ctx.restore();
 }
 

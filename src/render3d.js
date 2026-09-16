@@ -73,6 +73,9 @@ export class ThreePlayRenderer {
     this.playerTextures = ['./029A536A-CC50-4049-B511-605245126177.png', './7B1D2CC0-C6BB-4150-83C2-ACAF5D70B983.png'].map(src => playerTextureLoader.load(src, texture => {
       texture.colorSpace = THREE.SRGBColorSpace;
     }));
+    this.playerLeftTextures = ['./594F8DAD-DC51-4DFF-9AC3-784FCB70FF74.png', './90285534-ECDC-4BA6-96D4-BBA630AE34B7.png'].map(src => playerTextureLoader.load(src, texture => {
+      texture.colorSpace = THREE.SRGBColorSpace;
+    }));
     this.playerJumpTexture = playerTextureLoader.load('./B1003C9C-4C47-4249-B6A9-1507F723BB9B.png', texture => {
       texture.colorSpace = THREE.SRGBColorSpace;
     });
@@ -721,19 +724,21 @@ export class ThreePlayRenderer {
     );
     const playerFacing = game.player.vx < -.01 ? -1 : game.player.vx > .01 ? 1 : (game.player.facing ?? 1);
     const playerRunning = game.player.grounded && Math.abs(game.player.vx) > 1;
+    const walkingLeft = playerRunning && playerFacing < 0;
+    const walkTextures = walkingLeft ? this.playerLeftTextures : this.playerTextures;
     const playerFrame = playerRunning ? Math.floor(time * 8) % 2 : 0;
     const playerTexture = !game.player.grounded ? this.playerJumpTexture
-      : playerRunning ? this.playerTextures[playerFrame] : this.playerIdleTexture;
+      : playerRunning ? walkTextures[playerFrame] : this.playerIdleTexture;
     if (this.playerNode.material.map !== playerTexture) {
       this.playerNode.material.map = playerTexture;
       this.playerNode.material.needsUpdate = true;
     }
     // Source PNGs have different transparent margins (all are 1254px square).
     const footY = !game.player.grounded ? 1155
-      : playerRunning ? [1121, 1157][playerFrame] : 1193;
-    this.playerNode.center.set(.62, 1 - footY / 1254);
+      : playerRunning ? (walkingLeft ? [1153, 1135] : [1121, 1157])[playerFrame] : 1193;
+    this.playerNode.center.set(walkingLeft ? .38 : .62, 1 - footY / 1254);
     const playerScale = this.playerNode.userData.baseScale ?? 1.55;
-    this.playerNode.scale.set(playerScale * (playerFacing < 0 ? -1 : 1), playerScale, 1);
+    this.playerNode.scale.set(playerScale * (!walkingLeft && playerFacing < 0 ? -1 : 1), playerScale, 1);
 
     this.playerShadow.visible = Boolean(game.player.grounded);
     if (this.playerShadow.visible) {
@@ -833,6 +838,7 @@ export class ThreePlayRenderer {
       this.playerNode.userData.ownedMaterial = null;
     }
     for (const texture of this.playerTextures) texture.dispose();
+    for (const texture of this.playerLeftTextures) texture.dispose();
     this.playerJumpTexture.dispose();
     this.playerIdleTexture.dispose();
     for (const material of this.materials.values()) material.dispose();
