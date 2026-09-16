@@ -210,7 +210,19 @@ function normalizeTrikeFrames(image) {
       const x1 = Math.round((col + 1) * image.naturalWidth / COLUMNS);
       const y0 = Math.round(row * image.naturalHeight / ROWS);
       const y1 = Math.round((row + 1) * image.naturalHeight / ROWS);
-      cells.push(extractMeaningfulOpaqueComponents(sourceCtx, x0, y0, x1 - x0, y1 - y0));
+
+      // Walk/flipped art should contain only the dinosaur itself. Keeping only the
+      // largest connected shape strips the tiny black dots and neighbouring-cell
+      // bleed visible near the left-facing snout and right-facing feet. Sliding
+      // art is the one exception because its detached speed streaks are intentional.
+      const rawCell = col === 3
+        ? extractMeaningfulOpaqueComponents(sourceCtx, x0, y0, x1 - x0, y1 - y0)
+        : extractLargestOpaqueComponent(sourceCtx, x0, y0, x1 - x0, y1 - y0);
+      cells.push({
+        ...rawCell,
+        coreWidth: rawCell.coreWidth ?? rawCell.width,
+        coreHeight: rawCell.coreHeight ?? rawCell.height
+      });
     }
   }
 
