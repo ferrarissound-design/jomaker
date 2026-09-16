@@ -15,16 +15,20 @@ let paused=false,renderTime=0;
 let playRenderer=null,playLoadToken=0;
 let draftSignature='',lastDraftWrite=0;
 const BGM_SRC='./sunrise_at_pixel_peak.mp3';
+const JUMP_SFX_SRC='./ジャンプ.mp3';
 const BGM_VOLUME=.27;
 const BGM_DUCKED_VOLUME=.16;
 const bgm=new Audio(BGM_SRC);
 bgm.loop=true;
 bgm.preload='auto';
 bgm.volume=BGM_VOLUME;
+const jumpSfx=new Audio(JUMP_SFX_SRC);
+jumpSfx.preload='auto';
+jumpSfx.volume=.72;
 let sfxContext=null,bgmDuckTimer=0;
 const prepareSfx=()=>{const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass)return null;sfxContext??=new AudioContextClass();if(sfxContext.state==='suspended')sfxContext.resume().catch(()=>{});return sfxContext;};
 const duckBgm=(duration=150)=>{clearTimeout(bgmDuckTimer);bgm.volume=BGM_DUCKED_VOLUME;bgmDuckTimer=setTimeout(()=>{bgm.volume=BGM_VOLUME;},duration);};
-const playJumpSfx=()=>{const audio=prepareSfx();if(!audio||audio.state==='closed')return;duckBgm(130);const now=audio.currentTime,master=audio.createGain();master.gain.setValueAtTime(.0001,now);master.gain.exponentialRampToValueAtTime(.28,now+.008);master.gain.exponentialRampToValueAtTime(.0001,now+.17);master.connect(audio.destination);const voice=(type,start,end,level)=>{const osc=audio.createOscillator(),gain=audio.createGain();osc.type=type;osc.frequency.setValueAtTime(start,now);osc.frequency.exponentialRampToValueAtTime(end,now+.13);gain.gain.setValueAtTime(level,now);gain.connect(master);osc.connect(gain);osc.start(now);osc.stop(now+.18);};voice('triangle',330,760,1);voice('square',660,1260,.16);};
+const playJumpSfx=()=>{duckBgm(500);jumpSfx.currentTime=0;jumpSfx.play().catch(()=>{});};
 const playTone=(type,start,end,duration,volume,delay=0)=>{const audio=prepareSfx();if(!audio||audio.state==='closed')return;const now=audio.currentTime+delay,osc=audio.createOscillator(),gain=audio.createGain();osc.type=type;osc.frequency.setValueAtTime(start,now);osc.frequency.exponentialRampToValueAtTime(Math.max(1,end),now+duration);gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(volume,now+.006);gain.gain.exponentialRampToValueAtTime(.0001,now+duration);osc.connect(gain);gain.connect(audio.destination);osc.start(now);osc.stop(now+duration+.02);};
 const playCoinSfx=()=>{duckBgm(130);playTone('triangle',920,1460,.1,.22);playTone('sine',1460,1880,.08,.12,.045);};
 const playLandingSfx=()=>{duckBgm(100);playTone('triangle',260,145,.095,.17);playTone('square',520,280,.06,.055);};
@@ -119,4 +123,3 @@ function run(){last=0;accumulator=0;const tick=now=>{const dt=last?Math.min((now
     const sceneTime=mode==='play'?renderTime:now/1000;if(mode==='play'&&playRenderer)playRenderer.render(game,camera,cameraY,scale,w,h,sceneTime);else render(ctx,w,h,editor.stage,camera,scale,mode==='edit',game,sceneTime,selected,cameraY);if(mode==='edit'){if(dirty)saveDraftIfNeeded();const slider=app.querySelector('#scroll');slider.max=maxCamera();slider.value=camera;app.querySelector('#position').textContent=`位置 ${Math.floor(camera/TILE)}`;}frame=requestAnimationFrame(tick);};frame=requestAnimationFrame(tick);}
 window.addEventListener('beforeunload',e=>{if(dirty){saveDraftIfNeeded(true);e.preventDefault();e.returnValue='';}});
 home();
-
