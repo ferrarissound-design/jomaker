@@ -1,5 +1,5 @@
-import { TILE } from './stage.js';
-import { GameEngine } from './engine.js';
+import { TILE } from './stage.js?v=20260916-trike-1';
+import { GameEngine } from './engine.js?v=20260916-trike-1';
 
 const overlaps = (a, b) =>
   a.x < b.x + b.w &&

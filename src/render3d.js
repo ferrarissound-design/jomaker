@@ -1,6 +1,6 @@
-import { makeAnimeEnemy, animateAnimeEnemy } from './anime-enemies.js?v=20260916-facing-1';
-import { TILE, PARTS } from './stage.js';
-import { initAnimeStyle, makeGrassBlock, buildAnimeBackdrop } from './anime-world.js';
+import { makeAnimeEnemy, animateAnimeEnemy } from './anime-enemies.js?v=20260916-trike-1';
+import { TILE, PARTS } from './stage.js?v=20260916-trike-1';
+import { initAnimeStyle, makeGrassBlock, buildAnimeBackdrop } from './anime-world.js?v=20260916-trike-1';
 
 const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
 let threePromise = null;
@@ -552,7 +552,7 @@ export class ThreePlayRenderer {
 
   buildStaticStage() {
     for (const o of this.stage.objects) {
-      if (['enemy', 'flyingEnemy', 'movingPlatform', 'crate'].includes(o.type)) continue;
+      if (['enemy', 'flyingEnemy', 'trikeEnemy', 'movingPlatform', 'crate'].includes(o.type)) continue;
       const node = this.makePart(o.type, o.props);
       node.position.set(o.x + .5, this.stage.height - o.y - .5, this.depthFor(o.type));
       this.world.add(node);
@@ -624,7 +624,7 @@ export class ThreePlayRenderer {
     if (signature === this.enemySignature) return;
     for (const node of this.enemyNodes) this.releaseDynamicNode(node);
     this.enemyNodes = game.enemies.map(e => {
-      const node = makeAnimeEnemy(this, e.type === 'flyingEnemy' ? 'flyingEnemy' : 'enemy');
+      const node = makeAnimeEnemy(this, e.type ?? 'enemy');
       this.dynamic.add(node);
       return node;
     });

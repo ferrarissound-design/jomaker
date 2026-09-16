@@ -1,4 +1,5 @@
-import { TILE, clone, validateStage } from './stage.js';
+import { moveTrike, hitTrike } from './trike-enemy.js?v=20260916-trike-1';
+import { TILE, clone, validateStage } from './stage.js?v=20260916-trike-1';
 
 const overlaps = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 const objectKey = o => `${o.x},${o.y}`;
@@ -117,7 +118,7 @@ export class GameEngine {
     this.projectiles = [];
 
     this.enemies = this.stage.objects
-      .filter(o => ['enemy', 'flyingEnemy'].includes(o.type))
+      .filter(o => ['enemy', 'flyingEnemy', 'trikeEnemy'].includes(o.type))
       .map((o, index) => o.type === 'flyingEnemy'
         ? {
             key: objectKey(o),
@@ -134,12 +135,13 @@ export class GameEngine {
           }
         : {
             key: objectKey(o),
-            type: 'enemy',
+            type: o.type,
+            ...(o.type === 'trikeEnemy' ? { state: 'walk', direction: 1 } : {}),
             x: o.x * TILE + 7,
             y: o.y * TILE + 12,
             w: 34,
-            h: 36,
-            vx: 65,
+            h: o.type === 'trikeEnemy' ? 28 : 36,
+            vx: o.type === 'trikeEnemy' ? 60 : 65,
             vy: 0,
             grounded: false
           });
@@ -500,6 +502,17 @@ export class GameEngine {
 
   step(dt, input) {
     if (this.clear) return;
+    // Bound relative travel even when a caller supplies a long frame.
+    if (dt > 1 / 120 + 1e-9) {
+      let remaining = dt;
+      while (remaining > 1e-9 && !this.clear) {
+        const slice = Math.min(remaining, 1 / 120);
+        this.step(slice, input);
+        input = { ...input, jump: false };
+        remaining -= slice;
+      }
+      return;
+    }
     this.elapsed += dt;
     const p = this.player;
     const jumpHeld = input.jumpHeld ?? input.jump;
@@ -541,7 +554,10 @@ export class GameEngine {
 
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const e = this.enemies[i];
-      if (e.type === 'flyingEnemy') {
+      e.prevY = e.y;
+      if (e.type === 'trikeEnemy') {
+        moveTrike(this, e, dt);
+      } else if (e.type === 'flyingEnemy') {
         this.moveFlyingEnemy(e, dt);
       } else {
         const { wall } = this.move(e, dt, false);
@@ -556,10 +572,29 @@ export class GameEngine {
         continue;
       }
 
+    }
+
+    // Resolve attacks before player contacts, independent of placement order.
+    const defeated = new Set();
+    for (const e of this.enemies) {
+      if (e.type !== 'trikeEnemy' || e.state !== 'sliding' || defeated.has(e)) continue;
+      for (const other of this.enemies) {
+        if (other === e || defeated.has(other) || !overlaps(e, other)) continue;
+        defeated.add(other);
+        this.stompSerial++;
+      }
+    }
+    if (defeated.size) {
+      this.enemies = this.enemies.filter(e => !defeated.has(e));
+      this.updateEnemyDoors();
+    }
+    for (const e of [...this.enemies]) {
       if (!overlaps(p, e)) continue;
-      const stomp = p.vy >= 0 && movement.bottomBefore <= e.y + 10;
-      if (stomp) {
-        this.enemies.splice(i, 1);
+      const stomp = p.vy >= 0 && movement.bottomBefore <= (e.type === 'trikeEnemy' ? e.prevY : e.y) + 10;
+      if (e.type === 'trikeEnemy') {
+        if (hitTrike(this, e, stomp)) return this.die();
+      } else if (stomp) {
+        this.enemies.splice(this.enemies.indexOf(e), 1);
         p.y = e.y - p.h;
         p.vy = -420;
         p.grounded = false;

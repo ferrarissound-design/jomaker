@@ -1,8 +1,8 @@
-import { TILE } from './stage.js';
+import { TILE } from './stage.js?v=20260916-trike-1';
 
 // Shared vector artwork for the editor, 2D fallback and WebGL sprite frames.
 // Canvas is 160 x 140; the raptor's planted sole is always at y=132.
-export function paintAnimeEnemy(ctx, type, frame = 0) {
+export function paintAnimeEnemy(ctx, type, frame = 0, state = 'walk') {
   ctx.save();
   ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.lineWidth = 3;
   const ink = '#392e45';
@@ -18,6 +18,34 @@ export function paintAnimeEnemy(ctx, type, frame = 0) {
     oval(x,y,10,13,'#fff8df'); oval(x+3,y+1,5,9,'#853744',null);
     oval(x+4,y+1,2.8,7,'#302b3e',null);oval(x+2,y-4,2.5,3.5,'#fff',null);
   };
+  if(type === 'trikeEnemy') {
+    const flipped=state!=='walk';
+    if(flipped){ctx.translate(0,169);ctx.scale(1,-1);}
+    // Compact rust-orange body, scalloped neck frill and three ivory horns.
+    path('M47 91Q23 80 12 99L48 110Z','#ba5e50');
+    for(const [x,offset] of [[51,0],[78,1],[103,0]]) {
+      const step=(frame+offset)%2?5:0;
+      path(`M${x} 104L${x-step} 128Q${x+6-step} 135 ${x+15-step} 129L${x+16} 105Z`,'#ae514a');
+    }
+    oval(70,98,36,24,'#dc825b');
+    oval(71,102,25,13,'#f2ba7c',null);
+    path('M85 100L69 88L75 76L71 62L85 57L92 43L103 50L118 47L122 62L133 70L122 94Z','#b75055');
+    oval(101,78,23,28,'#efac6d');
+    oval(117,97,29,20,'#dc825b');
+    path('M91 69Q89 50 101 37L104 73Z','#fff0c8');
+    path('M110 73Q114 53 126 47L121 81Z','#fff0c8');
+    path('M134 91L148 75L145 101Z','#fff0c8');
+    if(flipped){
+      path('M105 88L114 94M114 88L105 94','transparent',ink,3);
+    }else{
+      eye(109,87);
+      path('M99 73L117 78','transparent',ink,3);
+    }
+    oval(137,102,2.5,2,ink,null);
+    path('M119 110Q129 115 138 110','transparent',ink,2);
+    oval(56,88,6,4,'#f8cf8e',null);
+    ctx.restore();return;
+  }
   if(type === 'flyingEnemy') {
     // A cheeky purple pterosaur: scalloped membranes, oversized eyes and crest.
     const raised=frame%2===0;
@@ -62,10 +90,10 @@ export function paintAnimeEnemy(ctx, type, frame = 0) {
   ctx.restore();
 }
 
-export function drawAnimeEnemy(ctx, type, x, y, width, height, time, direction = 1) {
+export function drawAnimeEnemy(ctx, type, x, y, width, height, time, direction = 1, state = 'walk') {
   if (type === 'flyingEnemy') direction = -1;
   ctx.save();ctx.translate(x+(direction<0?width:0),y);ctx.scale(direction*width/160,height/140);
-  paintAnimeEnemy(ctx,type,Math.floor(time*(type==='flyingEnemy'?8:7))%2);
+  paintAnimeEnemy(ctx,type,Math.floor(time*(type==='flyingEnemy'?8:7))%2,state);
   ctx.restore();
 }
 
@@ -73,12 +101,12 @@ export function makeAnimeEnemy(view,type) {
   const T=view.THREE;
   view.enemySpriteTextures ??= new Map();
   if(!view.enemySpriteTextures.has(type)){
-    const frames=[0,1,2,3].map(index=>{
+    const frames=Array.from({length:type==='trikeEnemy'?8:4},(_,index)=>{
       const frame=index%2;
       const c=document.createElement('canvas');c.width=480;c.height=420;
       const ctx=c.getContext('2d');ctx.scale(3,3);
-      if(index>=2){ctx.translate(160,0);ctx.scale(-1,1);}
-      paintAnimeEnemy(ctx,type,frame);
+      if(index%4>=2){ctx.translate(160,0);ctx.scale(-1,1);}
+      paintAnimeEnemy(ctx,type,frame,index>=4?'flipped':'walk');
       const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;
       view.animeTextures.push(t);return t;
     });
@@ -96,12 +124,15 @@ export function animateAnimeEnemy(view,node,enemy,time) {
   const flying=enemy.type==='flyingEnemy';
   const direction=flying?-1:enemy.vx<0?-1:enemy.vx>0?1:(node.userData.facing??1);
   node.userData.facing=direction;
-  const width=flying?1.6:1.35;
+  const width=flying?1.6:enemy.type==='trikeEnemy'?1:1.35;
   // Three.js sprites use scale magnitudes; mirror artwork instead of negative scale.
   node.scale.set(width,width*140/160,1);
   node.center.set(direction<0?.45:.55,flying?.45:1-132/140);
   node.position.set((enemy.x+enemy.w/2)/TILE,
     flying?view.stage.height-(enemy.y+enemy.h/2)/TILE:view.bodyBottom(enemy),.43);
-  const moving=flying||(enemy.grounded&&Math.abs(enemy.vx)>1);
-  node.material.map=node.userData.frames[(direction<0?2:0)+(moving?Math.floor(time*(flying?8:7))%2:0)];
+  const flipped=enemy.type==='trikeEnemy'&&enemy.state!=='walk';
+  const moving=flipped||flying||(enemy.grounded&&Math.abs(enemy.vx)>1);
+  // Inverted art has the same bottom anchor as walking art.
+  node.material.rotation=enemy.state==='sliding'?Math.sin(time*35)*.055:0;
+  node.material.map=node.userData.frames[(flipped?4:0)+(direction<0?2:0)+(moving?Math.floor(time*(flying?8:7))%2:0)];
 }

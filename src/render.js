@@ -1,6 +1,6 @@
-import { drawAnimeEnemy } from './anime-enemies.js?v=20260916-facing-1';
-import { TILE, PARTS } from './stage.js';
-import { drawBackground } from './backgrounds.js';
+import { drawAnimeEnemy } from './anime-enemies.js?v=20260916-trike-1';
+import { TILE, PARTS } from './stage.js?v=20260916-trike-1';
+import { drawBackground } from './backgrounds.js?v=20260916-trike-1';
 
 
 const PLAYER_WALK_RIGHT_SOURCES = ['./029A536A-CC50-4049-B511-605245126177.png', './7B1D2CC0-C6BB-4150-83C2-ACAF5D70B983.png'];
@@ -172,7 +172,7 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false,
     }
   }
 
-  if (type === 'enemy' || type === 'flyingEnemy') {
+  if (type === 'enemy' || type === 'flyingEnemy' || type === 'trikeEnemy') {
     drawAnimeEnemy(ctx, type, -8, -9, 64, 56, time, props?.direction === 'left' ? -1 : 1);
   }
 
@@ -369,7 +369,7 @@ export function render(ctx, w, h, stage, camera, scale, editing, game, time, sel
   for (const o of stage.objects) {
     const key = `${o.x},${o.y}`;
     if (o.x * TILE < camera - TILE || o.x * TILE > camera + w / scale + TILE) continue;
-    if (game && ['enemy', 'flyingEnemy', 'movingPlatform', 'crate'].includes(o.type)) continue;
+    if (game && ['enemy', 'flyingEnemy', 'trikeEnemy', 'movingPlatform', 'crate'].includes(o.type)) continue;
     if (game?.coins.has(key) && o.type === 'coin') continue;
     if (game?.collectedKeys.has(key) && o.type === 'key') continue;
     if (game?.openedDoors.has(key) && o.type === 'door') continue;
@@ -410,11 +410,11 @@ export function render(ctx, w, h, stage, camera, scale, editing, game, time, sel
       if (e.x > camera - TILE && e.x < camera + w / scale + TILE) {
         const enemyType = e.type ?? 'enemy';
         const flying = enemyType === 'flyingEnemy';
-        const ew = TILE * (flying ? 1.6 : 1.35), eh = ew * 140 / 160;
-        const direction = flying || e.vx < 0 ? -1 : 1;
+        const ew = TILE * (flying ? 1.6 : enemyType === 'trikeEnemy' ? 1 : 1.35), eh = ew * 140 / 160;
+        const direction = flying ? -1 : (enemyType === 'trikeEnemy' ? e.direction : (e.vx < 0 ? -1 : 1));
         drawAnimeEnemy(ctx, enemyType, e.x + e.w / 2 - ew * (direction < 0 ? .45 : .55),
           flying ? e.y + e.h / 2 - eh * .55 : e.y + e.h - eh * 132 / 140,
-          ew, eh, time, direction);
+          ew, eh, time, direction, e.state);
       }
     }
     ctx.fillStyle = '#344950';
