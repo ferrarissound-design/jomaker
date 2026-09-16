@@ -1,0 +1,10 @@
+/* Editor palette: keep utility tools first, then place the dinosaur trio immediately after moving platform. */
+.palette [data-tool="erase"]{order:-100}
+.palette [data-tool="configure"]{order:-99}
+.palette [data-tool="ground"]{order:-98}
+.palette [data-tool="block"]{order:-97}
+.palette [data-tool="platform"]{order:-96}
+.palette [data-tool="movingPlatform"]{order:-95}
+.palette [data-tool="trikeEnemy"]{order:-94}
+.palette [data-tool="enemy"]{order:-93}
+.palette [data-tool="flyingEnemy"]{order:-92}
