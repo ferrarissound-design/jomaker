@@ -1,3 +1,4 @@
+import { drawAnimeEnemy } from './anime-enemies.js';
 import { TILE, PARTS } from './stage.js';
 import { drawBackground } from './backgrounds.js';
 
@@ -160,94 +161,8 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false,
     }
   }
 
-  if (type === 'enemy') {
-    const stride = Math.sin(time * 12) * 1.8;
-    const dir = props?.direction === 'left' ? -1 : 1;
-    ctx.save();
-    ctx.translate(24, 22);
-    ctx.scale(dir, 1);
-
-    // Small carnivorous dinosaur: low body, counterbalancing tail and quick legs.
-    ctx.fillStyle = '#c98a63';
-    ctx.beginPath();
-    ctx.moveTo(-8, 5);
-    ctx.bezierCurveTo(-17, 3, -24, 7, -28, 12);
-    ctx.bezierCurveTo(-20, 10, -13, 11, -5, 13);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = '#d59a72';
-    ctx.beginPath(); ctx.ellipse(-2, 7, 13, 9, -.08, 0, Math.PI * 2); ctx.fill();
-
-    ctx.fillStyle = '#b97857';
-    ctx.beginPath(); ctx.roundRect(-7, 12 + stride, 6, 13, 3); ctx.fill();
-    ctx.beginPath(); ctx.roundRect(3, 12 - stride, 6, 13, 3); ctx.fill();
-    ctx.fillRect(-9, 23 + stride, 10, 3);
-    ctx.fillRect(3, 23 - stride, 11, 3);
-
-    ctx.fillStyle = '#dca17b';
-    ctx.beginPath(); ctx.ellipse(8, 0, 9, 8, -.08, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(15, 2, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
-
-    ctx.strokeStyle = '#8b5747';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(12, 4); ctx.lineTo(22, 4); ctx.stroke();
-
-    ctx.fillStyle = '#f4df8b';
-    ctx.beginPath(); ctx.arc(9, -2, 2.3, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#26353b';
-    ctx.beginPath(); ctx.arc(9.6, -2, 1, 0, Math.PI * 2); ctx.fill();
-
-    ctx.strokeStyle = '#b97857';
-    ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(5, 8); ctx.lineTo(11, 11); ctx.lineTo(14, 9); ctx.stroke();
-    ctx.restore();
-  }
-
-  if (type === 'flyingEnemy') {
-    const flap = Math.sin(time * 11) * 7;
-    const dir = props?.direction === 'left' ? -1 : 1;
-    ctx.save();
-    ctx.translate(24, 24);
-    ctx.scale(dir, 1);
-
-    // Pteranodon: broad membrane wings, long beak and rear crest.
-    ctx.fillStyle = '#8aa6b8';
-    ctx.beginPath();
-    ctx.moveTo(-3, -2);
-    ctx.bezierCurveTo(-12, -10 - flap, -20, -13 - flap, -25, -5);
-    ctx.bezierCurveTo(-18, -4, -11, 2 + flap * .25, -3, 5);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(2, -2);
-    ctx.bezierCurveTo(10, -10 - flap, 18, -13 - flap, 24, -4);
-    ctx.bezierCurveTo(17, -3, 10, 3 + flap * .25, 2, 5);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = '#718fa3';
-    ctx.beginPath(); ctx.ellipse(0, 4, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
-
-    ctx.fillStyle = '#9bb4c3';
-    ctx.beginPath(); ctx.ellipse(8, -1, 7, 6, -.12, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(12, -2); ctx.lineTo(27, 1); ctx.lineTo(12, 4); ctx.closePath(); ctx.fill();
-
-    ctx.fillStyle = '#6f8795';
-    ctx.beginPath();
-    ctx.moveTo(5, -5); ctx.lineTo(-5, -12); ctx.lineTo(8, -7); ctx.closePath(); ctx.fill();
-
-    ctx.fillStyle = '#f1d66e';
-    ctx.beginPath(); ctx.arc(9, -3, 1.8, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#243442';
-    ctx.beginPath(); ctx.arc(9.4, -3, .8, 0, Math.PI * 2); ctx.fill();
-
-    ctx.strokeStyle = '#607d8e';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(-2, 9); ctx.lineTo(-6, 14); ctx.moveTo(3, 9); ctx.lineTo(7, 14); ctx.stroke();
-    ctx.restore();
+  if (type === 'enemy' || type === 'flyingEnemy') {
+    drawAnimeEnemy(ctx, type, -8, -9, 64, 56, time, props?.direction === 'left' ? -1 : 1);
   }
 
   if (type === 'checkpoint') {
@@ -479,11 +394,12 @@ export function render(ctx, w, h, stage, camera, scale, editing, game, time, sel
     for (const e of game.enemies) {
       if (e.x > camera - TILE && e.x < camera + w / scale + TILE) {
         const enemyType = e.type ?? 'enemy';
-        const offsetX = enemyType === 'flyingEnemy' ? 4 : 7;
-        const offsetY = enemyType === 'flyingEnemy' ? 10 : 12;
-        drawPart(ctx, enemyType, e.x - offsetX, e.y - offsetY, TILE, time, false, {
-          direction: e.vx < 0 ? 'left' : 'right'
-        });
+        const flying = enemyType === 'flyingEnemy';
+        const ew = TILE * (flying ? 1.6 : 1.35), eh = ew * 140 / 160;
+        const direction = e.vx < 0 ? -1 : 1;
+        drawAnimeEnemy(ctx, enemyType, e.x + e.w / 2 - ew * (direction < 0 ? .45 : .55),
+          flying ? e.y + e.h / 2 - eh * .55 : e.y + e.h - eh * 132 / 140,
+          ew, eh, time, direction);
       }
     }
     ctx.fillStyle = '#344950';

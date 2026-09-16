@@ -1,3 +1,4 @@
+import { makeAnimeEnemy, animateAnimeEnemy } from './anime-enemies.js';
 import { TILE, PARTS } from './stage.js';
 import { initAnimeStyle, makeGrassBlock, buildAnimeBackdrop } from './anime-world.js';
 
@@ -617,9 +618,7 @@ export class ThreePlayRenderer {
     if (signature === this.enemySignature) return;
     for (const node of this.enemyNodes) this.releaseDynamicNode(node);
     this.enemyNodes = game.enemies.map(e => {
-      const node = e.type === 'flyingEnemy'
-        ? this.makePteranodon()
-        : this.makeDinosaur('#d59a72', '#b97857', .78);
+      const node = makeAnimeEnemy(this, e.type === 'flyingEnemy' ? 'flyingEnemy' : 'enemy');
       this.dynamic.add(node);
       return node;
     });
@@ -760,16 +759,7 @@ export class ThreePlayRenderer {
     for (let i = 0; i < game.enemies.length; i++) {
       const enemy = game.enemies[i];
       const node = this.enemyNodes[i];
-      this.bodyPosition(node, enemy, .62);
-      this.face(node, enemy.vx, 1);
-      if (enemy.type === 'flyingEnemy') {
-        const flap = Math.sin(time * 10.5 + i * .7) * .62;
-        if (node.userData.leftWing) node.userData.leftWing.rotation.x = flap;
-        if (node.userData.rightWing) node.userData.rightWing.rotation.x = flap;
-        node.rotation.z = Math.sin(time * 3.2 + i) * .04;
-      } else {
-        this.animateDinosaur(node, time + i * .35, enemy.vx, enemy.grounded);
-      }
+      animateAnimeEnemy(this, node, enemy, time + i * .125);
     }
 
     this.ensureCount(this.platformNodes, game.movingPlatforms.length, () => this.makePart('movingPlatform'));
