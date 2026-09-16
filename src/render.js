@@ -1,6 +1,15 @@
 import { TILE, PARTS } from './stage.js';
 import { drawBackground } from './backgrounds.js';
 
+
+const PLAYER_WALK_RIGHT_SOURCES = ['./029A536A-CC50-4049-B511-605245126177.png', './7B1D2CC0-C6BB-4150-83C2-ACAF5D70B983.png'];
+const PLAYER_WALK_RIGHT_FRAMES = PLAYER_WALK_RIGHT_SOURCES.map(src => {
+  const image = new Image();
+  image.decoding = 'async';
+  image.src = src;
+  return image;
+});
+
 export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false, props = null) {
   ctx.save();
   ctx.translate(x, y);
@@ -235,7 +244,7 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false,
   ctx.restore();
 }
 
-export function drawPlayer(ctx, p, time) {
+function drawVectorPlayer(ctx, p, time) {
   const dir = p.facing ?? (p.vx < 0 ? -1 : 1);
   const running = p.grounded && Math.abs(p.vx) > 1;
   const step = running ? Math.sin(time * 18) * 2.8 : 0;
@@ -351,6 +360,29 @@ export function drawPlayer(ctx, p, time) {
   ctx.fillStyle = '#355d45';
   ctx.beginPath(); ctx.ellipse(26, 12, 1.5, 1.1, 0, 0, Math.PI * 2); ctx.fill();
 
+  ctx.restore();
+}
+
+
+export function drawPlayer(ctx, p, time) {
+  const dir = p.facing ?? (p.vx < 0 ? -1 : 1);
+  const running = p.grounded && Math.abs(p.vx) > 1;
+  const frameIndex = running ? Math.floor(time * 8) % 2 : 0;
+  const frame = PLAYER_WALK_RIGHT_FRAMES[frameIndex];
+
+  if (!frame?.complete || !frame.naturalWidth || !frame.naturalHeight) {
+    drawVectorPlayer(ctx, p, time);
+    return;
+  }
+
+  const bob = running ? Math.abs(Math.sin(time * 16)) * 1.1 : (!p.grounded ? -1.5 : 0);
+  const targetHeight = Math.max(p.h * 1.7, 62);
+  const targetWidth = targetHeight * (frame.naturalWidth / frame.naturalHeight);
+
+  ctx.save();
+  ctx.translate(p.x + p.w / 2, p.y + p.h / 2 + bob);
+  ctx.scale(dir, 1);
+  ctx.drawImage(frame, -targetWidth / 2, -targetHeight * .58, targetWidth, targetHeight);
   ctx.restore();
 }
 

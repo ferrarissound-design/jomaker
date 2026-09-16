@@ -66,7 +66,21 @@ class ThreePlayRenderer {
 
     this.buildBackdrop();
     this.buildStaticStage();
-    this.playerNode = this.makeDinosaur('#82d98a', '#5caf69', 1);
+    const playerTextureLoader = new THREE.TextureLoader();
+    this.playerTextures = ['./029A536A-CC50-4049-B511-605245126177.png', './7B1D2CC0-C6BB-4150-83C2-ACAF5D70B983.png'].map(src => playerTextureLoader.load(src, texture => {
+      texture.colorSpace = THREE.SRGBColorSpace;
+    }));
+    const playerMaterial = new THREE.SpriteMaterial({
+      map: this.playerTextures[0],
+      transparent: true,
+      depthWrite: false,
+      alphaTest: .02,
+      toneMapped: false
+    });
+    this.playerNode = new THREE.Sprite(playerMaterial);
+    this.playerNode.userData.baseScale = 1.55;
+    this.playerNode.userData.ownedMaterial = playerMaterial;
+    this.playerNode.scale.set(1.55, 1.55, 1);
     this.playerNode.position.z = .72;
     this.dynamic.add(this.playerNode);
     this.playerShadow = this.makeContactShadow();
@@ -711,8 +725,15 @@ class ThreePlayRenderer {
 
   updateDynamic(game, time) {
     this.bodyPosition(this.playerNode, game.player, .72, .07);
-    this.face(this.playerNode, game.player.vx, game.player.facing ?? 1);
-    this.animateDinosaur(this.playerNode, time, game.player.vx, game.player.grounded);
+    const playerFacing = game.player.vx < -.01 ? -1 : game.player.vx > .01 ? 1 : (game.player.facing ?? 1);
+    const playerRunning = game.player.grounded && Math.abs(game.player.vx) > 1;
+    const playerFrame = playerRunning ? Math.floor(time * 8) % 2 : 0;
+    if (this.playerNode.material.map !== this.playerTextures[playerFrame]) {
+      this.playerNode.material.map = this.playerTextures[playerFrame];
+      this.playerNode.material.needsUpdate = true;
+    }
+    const playerScale = this.playerNode.userData.baseScale ?? 1.55;
+    this.playerNode.scale.set(playerScale * (playerFacing < 0 ? -1 : 1), playerScale, 1);
 
     this.playerShadow.visible = Boolean(game.player.grounded);
     if (this.playerShadow.visible) {
