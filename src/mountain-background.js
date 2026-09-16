@@ -85,6 +85,7 @@ if (!ThreePlayRenderer.prototype[PATCH_FLAG]) {
           map: texture,
           transparent: true,
           alphaTest: .02,
+          depthTest: true,
           depthWrite: false,
           toneMapped: false,
           fog: false
@@ -111,9 +112,11 @@ if (!ThreePlayRenderer.prototype[PATCH_FLAG]) {
           const width = height * aspect;
           const tree = new T.Sprite(material);
           tree.center.set(.5, 0);
-          tree.position.set(x, .08, -3.85 - (i % 2) * .5);
+          // Keep trees clearly inside the backdrop layer. Do not force a later
+          // renderOrder, because that makes a transparent sprite paint over the
+          // player even when its 3D depth is farther away.
+          tree.position.set(x, .08, -4.8 - (i % 2) * .35);
           tree.scale.set(width, height, 1);
-          tree.renderOrder = 1;
           group.add(tree);
         }
 
