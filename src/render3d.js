@@ -1,4 +1,5 @@
 import { TILE, PARTS } from './stage.js';
+import { initAnimeStyle, makeGrassBlock, buildAnimeBackdrop } from './anime-world.js';
 
 const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
 let threePromise = null;
@@ -16,6 +17,7 @@ export class ThreePlayRenderer {
     this.canvas = canvas;
     this.materials = new Map();
     this.geometries = new Map();
+    initAnimeStyle(this);
     this.staticEntries = [];
     this.enemySignature = '';
     this.enemyNodes = [];
@@ -32,19 +34,19 @@ export class ThreePlayRenderer {
       powerPreference: 'high-performance'
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
-    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.enabled = false;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMapping = THREE.NoToneMapping;
     this.renderer.toneMappingExposure = 1.05;
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(36, 1, .1, 140);
     this.scene.add(this.camera);
 
-    const hemi = new THREE.HemisphereLight(0xf6fbff, 0x44605a, 1.65);
+    const hemi = new THREE.HemisphereLight(0xf6fbff, 0x44605a, 1.0);
     this.scene.add(hemi);
-    const sun = new THREE.DirectionalLight(0xfff3d6, 2.4);
+    const sun = new THREE.DirectionalLight(0xfff3d6, 1.5);
     sun.position.set(8, 18, 12);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -101,10 +103,9 @@ export class ThreePlayRenderer {
   material(color, roughness = .72, metalness = .02, emissive = 0x000000) {
     const key = `${color}:${roughness}:${metalness}:${emissive}`;
     if (!this.materials.has(key)) {
-      this.materials.set(key, new this.THREE.MeshStandardMaterial({
+      this.materials.set(key, new this.THREE.MeshToonMaterial({
+        gradientMap: this.toonRamp,
         color,
-        roughness,
-        metalness,
         emissive,
         emissiveIntensity: emissive ? .35 : 0
       }));
@@ -116,6 +117,11 @@ export class ThreePlayRenderer {
     const mesh = new this.THREE.Mesh(geometry, material);
     mesh.castShadow = cast;
     mesh.receiveShadow = receive;
+    if (material.isMeshToonMaterial) {
+      const outline = new this.THREE.Mesh(geometry, this.outlineMaterial);
+      outline.scale.setScalar(1.035);
+      mesh.add(outline);
+    }
     return mesh;
   }
 
@@ -200,7 +206,7 @@ export class ThreePlayRenderer {
     const g = new T.Group();
     const color = PARTS[type]?.[2] ?? '#ffffff';
 
-    if (type === 'ground') return this.block('#4a8978', '#8bc8a0');
+    if (type === 'ground') return makeGrassBlock(this);
     if (type === 'block') return this.block('#eda85c', '#ffd28a');
     if (type === 'switchBlock') return this.block('#d86f69', '#ffd1cd');
     if (type === 'pressureBlock') return this.block('#5e9fb0', '#c9e8ee');
@@ -218,10 +224,10 @@ export class ThreePlayRenderer {
     }
 
     if (type === 'platform' || type === 'movingPlatform') {
-      const slab = this.box(.98, .22, .76, type === 'movingPlatform' ? '#65aebc' : '#81b6bc');
+      const slab = this.box(.98, .22, .76, type === 'movingPlatform' ? '#d8934d' : '#77bc58');
       slab.position.y = .38;
       g.add(slab);
-      const shine = this.box(.76, .035, .79, '#d8f5ed');
+      const shine = this.box(.76, .035, .79, '#d7f498');
       shine.position.y = .505;
       g.add(shine);
       if (type === 'movingPlatform') {
@@ -271,10 +277,16 @@ export class ThreePlayRenderer {
       base.position.y = -.35;
       const top = this.box(.7, .11, .66, '#ffd07a');
       top.position.y = .12;
-      const coil = this.torus(.21, .045, '#7f6256');
-      coil.rotation.x = Math.PI / 2;
-      coil.scale.y = 1.7;
-      coil.position.y = -.08;
+      const coilGeometry = this.geometry('cartoon-spring', () => {
+        const points = [];
+        for (let i = 0; i <= 64; i++) {
+          const t = i / 64;
+          const angle = t * Math.PI * 6;
+          points.push(new T.Vector3(Math.cos(angle) * .2, -.25 + t * .32, Math.sin(angle) * .13));
+        }
+        return new T.TubeGeometry(new T.CatmullRomCurve3(points), 64, .035, 6, false);
+      });
+      const coil = this.mesh(coilGeometry, this.material('#65506b'));
       g.add(base, top, coil);
       return g;
     }
@@ -505,10 +517,9 @@ export class ThreePlayRenderer {
     eye.position.set(.44, .18, .17);
     g.add(eye);
 
-    const wingMat = new T.MeshStandardMaterial({
+    const wingMat = new T.MeshToonMaterial({
       color: '#8aa6b8',
-      roughness: .78,
-      metalness: 0,
+      gradientMap: this.toonRamp,
       side: T.DoubleSide
     });
     const leftWing = new T.Group();
@@ -529,34 +540,7 @@ export class ThreePlayRenderer {
   }
 
   buildBackdrop() {
-    const id = this.stage.background ?? 'tropicalSea';
-    const palette = id === 'sunsetCoast'
-      ? { sky: 0xf5a26f, fog: 0xf4b38b, water: '#557f9c', hill: '#765d69', hill2: '#9b6b65' }
-      : id === 'classic'
-        ? { sky: 0xbfe4dc, fog: 0xd7eee8, water: '#7ebc9e', hill: '#6fa47b', hill2: '#8fbd82' }
-        : { sky: 0x9edff2, fog: 0xd8f2f2, water: '#58acc3', hill: '#4c9d78', hill2: '#76b56d' };
-
-    this.scene.background = new this.THREE.Color(palette.sky);
-    this.scene.fog = new this.THREE.Fog(palette.fog, 20, 62);
-
-    const water = this.box(this.stage.width + 35, .16, 28, palette.water);
-    water.position.set(this.stage.width / 2, -.72, -9);
-    water.receiveShadow = false;
-    this.backdrop.add(water);
-
-    for (let x = -8, i = 0; x < this.stage.width + 12; x += 11, i++) {
-      const hill = this.sphere(6.5, 3.2 + (i % 3) * .45, 3.6, i % 2 ? palette.hill : palette.hill2);
-      hill.position.set(x, 1.1 + (i % 2) * .45, -12 - (i % 3) * 2);
-      hill.castShadow = false;
-      hill.receiveShadow = false;
-      this.backdrop.add(hill);
-      if (id === 'tropicalSea' && i % 2 === 0) {
-        const island = this.sphere(2.6, .5, 1.9, '#d8bf7d');
-        island.position.set(x + 2.8, -.25, -6.5);
-        island.castShadow = false;
-        this.backdrop.add(island);
-      }
-    }
+    buildAnimeBackdrop(this);
   }
 
   buildStaticStage() {
@@ -863,6 +847,8 @@ export class ThreePlayRenderer {
     this.playerIdleTexture.dispose();
     for (const material of this.materials.values()) material.dispose();
     for (const geometry of this.geometries.values()) geometry.dispose();
+    for (const texture of this.animeTextures) texture.dispose();
+    this.outlineMaterial.dispose();
     this.renderer.dispose();
   }
 }

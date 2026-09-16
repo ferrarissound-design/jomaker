@@ -1,5 +1,5 @@
 export const BACKGROUNDS = {
-  tropicalSea: { id: 'tropicalSea', name: '南国の海', src: new URL('./assets/backgrounds/tropical-sea.svg', import.meta.url).href },
+  tropicalSea: { id: 'tropicalSea', name: '恐竜の冒険島', src: new URL('./assets/backgrounds/tropical-sea.svg?v=20260916-anime-1', import.meta.url).href },
   sunsetCoast: { id: 'sunsetCoast', name: '夕焼け海岸', src: new URL('./assets/backgrounds/sunset-coast.svg', import.meta.url).href },
   classic: { id: 'classic', name: 'クラシック', src: null }
 };

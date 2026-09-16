@@ -24,7 +24,21 @@ export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false,
   ctx.scale(size / TILE, size / TILE);
   ctx.fillStyle = PARTS[type]?.[2] ?? '#fff';
 
-  if (['ground', 'block', 'breakable', 'switchBlock', 'pressureBlock', 'timerBlock'].includes(type)) {
+  if (type === 'ground') {
+    ctx.fillStyle = '#bd8051'; ctx.fillRect(0, 0, 48, 48);
+    ctx.fillStyle = '#d99b61'; ctx.fillRect(0, 10, 48, 20);
+    ctx.strokeStyle = '#f2bc7b'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    for (const [px, py] of [[8,19],[30,33],[39,22]]) {
+      ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px+4,py-1); ctx.stroke();
+    }
+    ctx.fillStyle = '#73c844'; ctx.strokeStyle = '#36583b'; ctx.lineWidth = 1.5;
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(48,0);ctx.lineTo(48,8);
+    for(let px=48;px>0;px-=8)ctx.quadraticCurveTo(px-4,16,px-8,8);
+    ctx.lineTo(0,0);ctx.fill();ctx.stroke();
+    ctx.fillStyle = '#b8ed70';ctx.fillRect(0,0,48,3);
+  }
+
+  if (['block', 'breakable', 'switchBlock', 'pressureBlock', 'timerBlock'].includes(type)) {
     ctx.beginPath();
     ctx.roundRect(1, 1, 46, 46, 6);
     ctx.fill();
