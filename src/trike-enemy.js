@@ -1,4 +1,4 @@
-import { TILE } from './stage.js?v=20260916-trike-direction-1';
+import { TILE } from './stage.js?v=20260916-trike-default-left-1';
 
 export const TRIKE_WALK_SPEED = 60;
 export const TRIKE_SLIDE_SPEED = 290;

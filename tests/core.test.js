@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createStage, createStageId, gridLine, StageEditor, StageStore, validateStage, resizeStage, resetStageLayout } from '../src/stage.js?v=20260916-trike-direction-1';
-import { GameEngine } from '../src/engine.js?v=20260916-trike-direction-1';
-import { encodeStage, decodeStage } from '../src/share.js?v=20260916-trike-direction-1';
+import { createStage, createStageId, gridLine, StageEditor, StageStore, validateStage, resizeStage, resetStageLayout } from '../src/stage.js?v=20260916-trike-default-left-1';
+import { GameEngine } from '../src/engine.js?v=20260916-trike-default-left-1';
+import { encodeStage, decodeStage } from '../src/share.js?v=20260916-trike-default-left-1';
 const idle={left:false,right:false,jump:false,jumpHeld:false};
 const advance=(g,n,input=idle)=>{for(let i=0;i<n;i++)g.step(1/120,input);};
 test('reset preserves custom dimensions and metadata, remains saveable and supports undo',()=>{

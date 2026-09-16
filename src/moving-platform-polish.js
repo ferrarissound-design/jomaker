@@ -1,4 +1,4 @@
-import { ThreePlayRenderer } from './render3d.js?v=20260916-trike-direction-1';
+import { ThreePlayRenderer } from './render3d.js?v=20260916-trike-default-left-1';
 
 // Final readability pass for moving platforms on small phone screens.
 // The physics footprint is untouched: only the rendered artwork gets a little

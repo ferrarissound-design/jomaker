@@ -1,11 +1,11 @@
-import '../src/engine-fixes.js?v=20260916-trike-direction-1';
-import '../src/moving-platform-collision.js?v=20260916-trike-direction-1';
+import '../src/engine-fixes.js?v=20260916-trike-default-left-1';
+import '../src/moving-platform-collision.js?v=20260916-trike-default-left-1';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { GameEngine } from '../src/engine.js?v=20260916-trike-direction-1';
-import { createStage, StageEditor, StageStore } from '../src/stage.js?v=20260916-trike-direction-1';
-import { encodeStage, decodeStage } from '../src/share.js?v=20260916-trike-direction-1';
-import { moveTrike } from '../src/trike-enemy.js?v=20260916-trike-direction-1';
+import { GameEngine } from '../src/engine.js?v=20260916-trike-default-left-1';
+import { createStage, StageEditor, StageStore } from '../src/stage.js?v=20260916-trike-default-left-1';
+import { encodeStage, decodeStage } from '../src/share.js?v=20260916-trike-default-left-1';
+import { moveTrike } from '../src/trike-enemy.js?v=20260916-trike-default-left-1';
 const idle={left:false,right:false,jump:false};
 function setup(extra=[]) {
   const s=createStage();s.objects.push({type:'trikeEnemy',x:8,y:11},...extra);
@@ -92,7 +92,7 @@ test('trikes can be configured to start walking left or right',()=>{
     const stage=createStage();
     const editor=new StageEditor(stage);editor.place('trikeEnemy',8,11);
     const trike=editor.stage.objects.find(o=>o.type==='trikeEnemy');
-    assert.equal(trike.props.direction,'right');
+    assert.equal(trike.props.direction,'left');
     trike.props.direction=direction;
     const encoded=decodeStage(encodeStage(editor.stage));
     const game=new GameEngine(encoded);const enemy=game.enemies[0];

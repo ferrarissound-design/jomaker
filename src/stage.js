@@ -33,7 +33,7 @@ export const PARTS = {
 
 export const PART_DEFAULTS = {
   movingPlatform: { axis: 'x', distance: 2, speed: 1.25 },
-  trikeEnemy: { direction: 'right' },
+  trikeEnemy: { direction: 'left' },
   cannon: { direction: 'right', interval: 1.65 },
   timerSwitch: { duration: 3.2 },
   warp: { target: '' }

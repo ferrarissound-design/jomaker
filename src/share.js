@@ -1,4 +1,4 @@
-import { clone, validateStage } from './stage.js?v=20260916-trike-direction-1';
+import { clone, validateStage } from './stage.js?v=20260916-trike-default-left-1';
 
 const PREFIX = 'JO1.';
 
