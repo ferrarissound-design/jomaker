@@ -57,9 +57,16 @@ export function moveTrike(game, e, dt) {
 export function hitTrike(game,e,stomp) {
   const p=game.player;
   if(stomp) {
-    e.state='flipped';e.flippedTimer=0;e.vx=0;
+    const defeated=e.state==='flipped';
     p.y=e.y-p.h;p.vy=-420;p.grounded=false;p.platformKey=null;
     game.stompSerial++;
+    if(defeated) {
+      const index=game.enemies.indexOf(e);
+      if(index>=0) game.enemies.splice(index,1);
+      game.updateEnemyDoors();
+      return false;
+    }
+    e.state='flipped';e.flippedTimer=0;e.vx=0;
     return false;
   }
   if(e.state!=='flipped') return true;
