@@ -198,3 +198,55 @@ GameEngine.prototype.moveCrates = function moveCrates(dt) {
     }
   }
 };
+
+// Two trikes that are both in the kicked/sliding state destroy each other.
+// The engine substeps at 120 Hz, so checking the small swept gap before the
+// normal step prevents fast trikes from passing through each other between frames.
+const TRIKE_SLIDE_SPEED = 290;
+const baseStep = GameEngine.prototype.step;
+const slidingTrikesWillCollide = (a, b, dt) => {
+  if (a.type !== 'trikeEnemy' || b.type !== 'trikeEnemy') return false;
+  if (a.state !== 'sliding' || b.state !== 'sliding') return false;
+  if (a.y >= b.y + b.h || a.y + a.h <= b.y) return false;
+  if (overlaps(a, b)) return true;
+
+  const aCenter = a.x + a.w / 2;
+  const bCenter = b.x + b.w / 2;
+  const left = aCenter <= bCenter ? a : b;
+  const right = left === a ? b : a;
+  const leftVx = left.direction * TRIKE_SLIDE_SPEED;
+  const rightVx = right.direction * TRIKE_SLIDE_SPEED;
+  const closingSpeed = leftVx - rightVx;
+  if (closingSpeed <= 0) return false;
+
+  const gap = right.x - (left.x + left.w);
+  return gap <= closingSpeed * dt + 1e-9;
+};
+
+GameEngine.prototype.step = function stepWithTrikeMutualDefeat(dt, input) {
+  // Long frames are split by the base engine. Let those recursive 120 Hz
+  // slices pass through this wrapper so collision timing stays precise.
+  if (dt <= 1 / 120 + 1e-9) {
+    const sliding = (this.enemies ?? []).filter(e => e.type === 'trikeEnemy' && e.state === 'sliding');
+    const defeated = new Set();
+
+    for (let i = 0; i < sliding.length; i++) {
+      if (defeated.has(sliding[i])) continue;
+      for (let j = i + 1; j < sliding.length; j++) {
+        if (defeated.has(sliding[j])) continue;
+        if (!slidingTrikesWillCollide(sliding[i], sliding[j], dt)) continue;
+        defeated.add(sliding[i]);
+        defeated.add(sliding[j]);
+        break;
+      }
+    }
+
+    if (defeated.size) {
+      this.enemies = this.enemies.filter(e => !defeated.has(e));
+      this.stompSerial++;
+      this.updateEnemyDoors();
+    }
+  }
+
+  return baseStep.call(this, dt, input);
+};

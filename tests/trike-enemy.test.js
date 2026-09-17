@@ -1,4 +1,4 @@
-import '../src/engine-fixes.js?v=20260916-enemy-direction-1';
+import '../src/engine-fixes.js?v=20260917-trike-mutual-defeat-1';
 import '../src/moving-platform-collision.js?v=20260916-enemy-direction-1';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -103,11 +103,13 @@ test('a kicked trike bounces off a wall and kills its kicker on return',()=>{
   for(let i=0;i<150&&g.deaths===0;i++){g.step(1/120,idle);if(e.direction===-1)reflected=true;}
   assert.ok(reflected);assert.equal(g.deaths,1);
 });
-test('two sliding trikes resolve without passing through each other',()=>{
-  const g=setup([{type:'trikeEnemy',x:10,y:11}]);
+test('two sliding trikes destroy each other on collision',()=>{
+  const g=setup([{type:'trikeEnemy',x:10,y:11},{type:'enemyDoor',x:15,y:11}]);
   Object.assign(g.enemies[0],{state:'sliding',direction:1,x:430,y:548});
   Object.assign(g.enemies[1],{state:'sliding',direction:-1,x:465,y:548});
-  g.step(1/120,idle);assert.equal(g.enemies.length,1);
+  g.step(1/120,idle);
+  assert.equal(g.enemies.length,0);
+  assert.ok(!g.solids.has('15,11'));
 });
 
 test('trikes can be configured to start walking left or right',()=>{
