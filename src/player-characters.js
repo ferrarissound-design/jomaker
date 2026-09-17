@@ -1,7 +1,7 @@
 export const PLAYER_CHARACTER_STORAGE_KEY = 'jomaker.playerCharacter';
 export const DEFAULT_PLAYER_CHARACTER = 'dino';
 export const MOMOSE_SPRITE_SRC = './CBED4124-3DEC-4943-8F26-61C3163030A8.png';
-export const TOA_SPRITE_SRC = './7F5A6661-079F-4749-BC81-71090029FA7D.png';
+export const TOA_SPRITE_SRC = './TOA-alternating-walk.png';
 export const JO_SPRITE_SRC = './631E092E-B66C-42C9-ACD8-BFDF3E25AFC7.png';
 
 export const PLAYER_CHARACTERS = Object.freeze({
@@ -39,13 +39,13 @@ export const JO_FRAMES = Object.freeze({
 // Individually measured alpha bounds with a 2px filtering gutter. anchorX is
 // the foot/body axis inside the crop, excluding flowing hair and raised hands.
 export const TOA_FRAMES = Object.freeze({
-  idle: Object.freeze({ x: 39, y: 21, w: 260, h: 521, anchorX: 158 }),
-  walkRight1: Object.freeze({ x: 377, y: 26, w: 303, h: 513, anchorX: 168 }),
-  walkRight2: Object.freeze({ x: 730, y: 26, w: 304, h: 513, anchorX: 175 }),
-  jumpRight: Object.freeze({ x: 1093, y: 14, w: 348, h: 516, anchorX: 181 }),
-  walkLeft1: Object.freeze({ x: 187, y: 575, w: 310, h: 491, anchorX: 138 }),
-  walkLeft2: Object.freeze({ x: 580, y: 572, w: 327, h: 496, anchorX: 140 }),
-  jumpLeft: Object.freeze({ x: 1000, y: 571, w: 349, h: 491, anchorX: 165 })
+  idle: Object.freeze({ x: 38, y: 22, w: 262, h: 521, anchorX: 159 }),
+  walkRight1: Object.freeze({ x: 377, y: 24, w: 304, h: 517, anchorX: 168 }),
+  walkRight2: Object.freeze({ x: 732, y: 25, w: 311, h: 516, anchorX: 176 }),
+  jumpRight: Object.freeze({ x: 1097, y: 14, w: 350, h: 517, anchorX: 182 }),
+  walkLeft1: Object.freeze({ x: 184, y: 574, w: 313, h: 494, anchorX: 139 }),
+  walkLeft2: Object.freeze({ x: 580, y: 574, w: 329, h: 492, anchorX: 141 }),
+  jumpLeft: Object.freeze({ x: 1000, y: 571, w: 352, h: 492, anchorX: 166 })
 });
 
 export function normalizePlayerCharacter(value) {
