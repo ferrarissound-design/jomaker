@@ -1,7 +1,7 @@
 import { makeAnimeEnemy, animateAnimeEnemy } from './anime-enemies.js?v=20260916-enemy-direction-1';
 import { TILE, PARTS } from './stage.js?v=20260916-enemy-direction-1';
 import { initAnimeStyle, makeGrassBlock, buildAnimeBackdrop } from './anime-world.js?v=20260916-enemy-direction-1';
-import { JO_FRAMES, JO_SPRITE_SRC, MOMOSE_FRAMES, MOMOSE_SPRITE_SRC, characterFrameNameFor } from './player-characters.js';
+import { TOA_FRAMES, TOA_SPRITE_SRC, JO_FRAMES, JO_SPRITE_SRC, MOMOSE_FRAMES, MOMOSE_SPRITE_SRC, characterFrameNameFor } from './player-characters.js';
 
 const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
 let threePromise = null;
@@ -89,7 +89,8 @@ export class ThreePlayRenderer {
     });
     this.characterTextures = {
       momose: this.makeCharacterTextures(MOMOSE_FRAMES, MOMOSE_SPRITE_SRC),
-      jo: this.makeCharacterTextures(JO_FRAMES, JO_SPRITE_SRC)
+      jo: this.makeCharacterTextures(JO_FRAMES, JO_SPRITE_SRC),
+      toa: this.makeCharacterTextures(TOA_FRAMES, TOA_SPRITE_SRC)
     };
     const playerMaterial = new THREE.SpriteMaterial({
       map: this.playerTextures[0],
@@ -766,7 +767,7 @@ export class ThreePlayRenderer {
     const walkTextures = walkingLeft ? this.playerLeftTextures : this.playerTextures;
     const playerFrame = playerRunning ? Math.floor(time * 8) % 2 : 0;
     const characterFrameName = characterFrameNameFor(game.player, time);
-    const sheetFrames = this.playerCharacter === 'momose' ? MOMOSE_FRAMES : this.playerCharacter === 'jo' ? JO_FRAMES : null;
+    const sheetFrames = this.playerCharacter === 'momose' ? MOMOSE_FRAMES : this.playerCharacter === 'jo' ? JO_FRAMES : this.playerCharacter === 'toa' ? TOA_FRAMES : null;
     const sheetTextures = this.characterTextures?.[this.playerCharacter];
     const playerTexture = sheetTextures ? sheetTextures[characterFrameName]
       : !game.player.grounded ? (jumpingLeft ? this.playerLeftJumpTexture : this.playerJumpTexture)
@@ -778,7 +779,7 @@ export class ThreePlayRenderer {
     if (sheetFrames) {
       const source = sheetFrames[characterFrameName];
       const playerHeight = this.playerCharacter === 'jo' ? 1.76 : 1.72;
-      this.playerNode.center.set(.5, 0);
+      this.playerNode.center.set((source.anchorX ?? source.w / 2) / source.w, 0);
       this.playerNode.scale.set(playerHeight * source.w / source.h, playerHeight, 1);
     } else {
       // Source PNGs have different transparent margins (all are 1254px square).

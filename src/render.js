@@ -1,7 +1,7 @@
 import { drawAnimeEnemy, ENEMY_VISUAL_WIDTH_TILES } from './anime-enemies.js?v=20260916-enemy-direction-1';
 import { TILE, PARTS } from './stage.js?v=20260916-enemy-direction-1';
 import { drawBackground } from './backgrounds.js?v=20260916-enemy-direction-1';
-import { JO_FRAMES, JO_SPRITE_SRC, MOMOSE_FRAMES, MOMOSE_SPRITE_SRC, characterFrameFor } from './player-characters.js';
+import { TOA_FRAMES, TOA_SPRITE_SRC, JO_FRAMES, JO_SPRITE_SRC, MOMOSE_FRAMES, MOMOSE_SPRITE_SRC, characterFrameFor } from './player-characters.js';
 
 
 const PLAYER_WALK_RIGHT_SOURCES = ['./029A536A-CC50-4049-B511-605245126177.png', './7B1D2CC0-C6BB-4150-83C2-ACAF5D70B983.png'];
@@ -35,6 +35,9 @@ const MOMOSE_SPRITE = new Image();
 MOMOSE_SPRITE.decoding = 'async';
 MOMOSE_SPRITE.src = MOMOSE_SPRITE_SRC;
 
+const TOA_SPRITE = new Image();
+TOA_SPRITE.decoding = 'async';
+TOA_SPRITE.src = TOA_SPRITE_SRC;
 const JO_SPRITE = new Image();
 JO_SPRITE.decoding = 'async';
 JO_SPRITE.src = JO_SPRITE_SRC;
@@ -325,7 +328,8 @@ export function drawPlayer(ctx, p, time) {
   const selectedCharacter = p.character ?? (typeof localStorage === 'undefined' ? 'dino' : localStorage.getItem('jomaker.playerCharacter')) ?? 'dino';
   const sheetCharacter = selectedCharacter === 'momose'
     ? { image: MOMOSE_SPRITE, frames: MOMOSE_FRAMES, minHeight: 70 }
-    : selectedCharacter === 'jo' ? { image: JO_SPRITE, frames: JO_FRAMES, minHeight: 72 } : null;
+    : selectedCharacter === 'jo' ? { image: JO_SPRITE, frames: JO_FRAMES, minHeight: 72 }
+      : selectedCharacter === 'toa' ? { image: TOA_SPRITE, frames: TOA_FRAMES, minHeight: 70 } : null;
   if (sheetCharacter?.image.complete && sheetCharacter.image.naturalWidth) {
     const source = characterFrameFor(sheetCharacter.frames, p, time);
     const targetHeight = Math.max(p.h * 1.9, sheetCharacter.minHeight);
@@ -333,7 +337,7 @@ export function drawPlayer(ctx, p, time) {
     ctx.drawImage(
       sheetCharacter.image,
       source.x, source.y, source.w, source.h,
-      p.x + p.w / 2 - targetWidth / 2, p.y + p.h - targetHeight,
+      p.x + p.w / 2 - targetWidth * ((source.anchorX ?? source.w / 2) / source.w), p.y + p.h - targetHeight,
       targetWidth, targetHeight
     );
     return;
