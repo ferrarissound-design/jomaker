@@ -2,9 +2,20 @@ import { TILE } from './stage.js?v=20260916-enemy-direction-1';
 
 export const TRIKE_WALK_SPEED = 60;
 export const TRIKE_SLIDE_SPEED = 290;
+export const TRIKE_FLIPPED_DURATION = 5;
 const overlaps = (a,b) => a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
 
 export function moveTrike(game, e, dt) {
+  if (e.state === 'flipped') {
+    e.flippedTimer = (e.flippedTimer ?? 0) + dt;
+    if (e.flippedTimer >= TRIKE_FLIPPED_DURATION) {
+      e.state = 'walk';
+      e.flippedTimer = 0;
+    }
+  } else if (e.flippedTimer) {
+    e.flippedTimer = 0;
+  }
+
   const speed = e.state === 'walk' ? TRIKE_WALK_SPEED : e.state === 'sliding' ? TRIKE_SLIDE_SPEED : 0;
   e.vx = speed * e.direction;
   const obstacles = [...game.solids.values(), ...game.crates, ...game.movingPlatforms];
@@ -46,7 +57,7 @@ export function moveTrike(game, e, dt) {
 export function hitTrike(game,e,stomp) {
   const p=game.player;
   if(stomp) {
-    e.state='flipped';e.vx=0;
+    e.state='flipped';e.flippedTimer=0;e.vx=0;
     p.y=e.y-p.h;p.vy=-420;p.grounded=false;p.platformKey=null;
     game.stompSerial++;
     return false;
@@ -55,7 +66,7 @@ export function hitTrike(game,e,stomp) {
   // Underside contact is harmless, but is not a kick.
   if(p.y>=e.y+e.h-4) return false;
   e.direction=p.x+p.w/2<e.x+e.w/2 ? 1 : -1;
-  e.state='sliding';e.vx=e.direction*TRIKE_SLIDE_SPEED;
+  e.state='sliding';e.flippedTimer=0;e.vx=e.direction*TRIKE_SLIDE_SPEED;
   // Separate the kicker rather than granting immunity to a returning shell.
   p.x=e.direction>0 ? e.x-p.w : e.x+e.w;
   game.stompSerial++;
