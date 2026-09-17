@@ -24,7 +24,6 @@ const overlaps = (a, b) =>
 
 const objectKey = o => `${o.x},${o.y}`;
 const pickupBody = o => ({ x: o.x * TILE + 8, y: o.y * TILE + 8, w: 32, h: 40 });
-const spikeBody = o => ({ x: o.x * TILE + 8, y: o.y * TILE + 8, w: 32, h: 40 });
 
 function collectJuracore(game) {
   const p = game.player;
@@ -78,10 +77,8 @@ function removePoweredTrikeInteractions(game, beforeStates) {
   defeatEnemies(game, defeated);
 }
 
-function touchingLethalStageHazard(game) {
-  const p = game.player;
-  if (p.y > game.stage.height * TILE + 100) return true;
-  return game.stage.objects.some(o => o.type === 'spike' && overlaps(p, spikeBody(o)));
+function fellOutOfStage(game) {
+  return game.player.y > game.stage.height * TILE + 100;
 }
 
 const baseReset = GameEngine.prototype.reset;
@@ -94,8 +91,9 @@ GameEngine.prototype.reset = function resetWithJuracore(clearCheckpoint = true) 
 };
 
 // engine-fixes.js already wraps step for trike-vs-trike interactions. This
-// wrapper intentionally sits outside that logic and only changes combat death
-// while the Juracore timer is active. Pits and spikes remain lethal.
+// wrapper intentionally sits outside that logic and changes damage death while
+// the Juracore timer is active. Enemy, cannon-shot and spike contacts are
+// harmless; falling out of the stage still counts as a miss.
 const baseStep = GameEngine.prototype.step;
 GameEngine.prototype.step = function stepWithJuracore(dt, input) {
   if (dt > 1 / 120 + 1e-9) return baseStep.call(this, dt, input);
@@ -129,9 +127,9 @@ GameEngine.prototype.step = function stepWithJuracore(dt, input) {
     if (powered) delete this.die;
   }
 
-  // A spike or a fall is still a real miss even while powered. Enemy and
-  // cannon-shot contacts are converted into attacks instead.
-  if (powered && blockedDeath && touchingLethalStageHazard(this)) {
+  // A fall remains a real miss. Spike damage is intentionally absorbed by
+  // Juracore power just like enemy and cannon-shot contact.
+  if (powered && blockedDeath && fellOutOfStage(this)) {
     return GameEngine.prototype.die.call(this);
   }
 
