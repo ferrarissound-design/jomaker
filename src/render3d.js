@@ -1,20 +1,22 @@
 import { makeAnimeEnemy, animateAnimeEnemy } from './anime-enemies.js?v=20260916-enemy-direction-1';
 import { TILE, PARTS } from './stage.js?v=20260916-enemy-direction-1';
 import { initAnimeStyle, makeGrassBlock, buildAnimeBackdrop } from './anime-world.js?v=20260916-enemy-direction-1';
+import { MOMOSE_FRAMES, MOMOSE_SPRITE_SRC } from './player-characters.js';
 
 const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
 let threePromise = null;
 
-export async function createPlayRenderer(canvas, stage) {
+export async function createPlayRenderer(canvas, stage, playerCharacter = (typeof localStorage === 'undefined' ? 'dino' : localStorage.getItem('jomaker.playerCharacter')) ?? 'dino') {
   threePromise ??= import(THREE_CDN);
   const THREE = await threePromise;
-  return new ThreePlayRenderer(THREE, canvas, stage);
+  return new ThreePlayRenderer(THREE, canvas, stage, playerCharacter);
 }
 
 export class ThreePlayRenderer {
-  constructor(THREE, canvas, stage) {
+  constructor(THREE, canvas, stage, playerCharacter = 'dino') {
     this.THREE = THREE;
     this.stage = stage;
+    this.playerCharacter = playerCharacter;
     this.canvas = canvas;
     this.materials = new Map();
     this.geometries = new Map();
@@ -85,6 +87,7 @@ export class ThreePlayRenderer {
     this.playerIdleTexture = playerTextureLoader.load('./9914630D-0C2F-469E-B82B-ED918A8EFB35.png', texture => {
       texture.colorSpace = THREE.SRGBColorSpace;
     });
+    this.momoseTextures = this.makeMomoseTextures();
     const playerMaterial = new THREE.SpriteMaterial({
       map: this.playerTextures[0],
       transparent: true,
@@ -100,6 +103,33 @@ export class ThreePlayRenderer {
     this.dynamic.add(this.playerNode);
     this.playerShadow = this.makeContactShadow();
     this.dynamic.add(this.playerShadow);
+  }
+
+  makeMomoseTextures() {
+    const textures = {};
+    const canvases = {};
+    for (const [name, frame] of Object.entries(MOMOSE_FRAMES)) {
+      const canvas = document.createElement('canvas');
+      canvas.width = frame.w;
+      canvas.height = frame.h;
+      canvases[name] = canvas;
+      const texture = new this.THREE.CanvasTexture(canvas);
+      texture.colorSpace = this.THREE.SRGBColorSpace;
+      texture.generateMipmaps = false;
+      texture.minFilter = this.THREE.LinearFilter;
+      texture.magFilter = this.THREE.LinearFilter;
+      textures[name] = texture;
+    }
+    const sheet = new Image();
+    sheet.decoding = 'async';
+    sheet.onload = () => {
+      for (const [name, frame] of Object.entries(MOMOSE_FRAMES)) {
+        canvases[name].getContext('2d').drawImage(sheet, frame.x, frame.y, frame.w, frame.h, 0, 0, frame.w, frame.h);
+        textures[name].needsUpdate = true;
+      }
+    };
+    sheet.src = MOMOSE_SPRITE_SRC;
+    return textures;
   }
 
   geometry(name, factory) {
@@ -732,18 +762,28 @@ export class ThreePlayRenderer {
     const dedicatedLeft = walkingLeft || jumpingLeft;
     const walkTextures = walkingLeft ? this.playerLeftTextures : this.playerTextures;
     const playerFrame = playerRunning ? Math.floor(time * 8) % 2 : 0;
-    const playerTexture = !game.player.grounded ? (jumpingLeft ? this.playerLeftJumpTexture : this.playerJumpTexture)
-      : playerRunning ? walkTextures[playerFrame] : this.playerIdleTexture;
+    const momoseFrameName = !game.player.grounded ? (jumpingLeft ? 'jumpLeft' : 'jumpRight')
+      : playerRunning ? (walkingLeft ? ['walkLeft1', 'walkLeft2'] : ['walkRight1', 'walkRight2'])[playerFrame] : 'idle';
+    const playerTexture = this.playerCharacter === 'momose' ? this.momoseTextures[momoseFrameName]
+      : !game.player.grounded ? (jumpingLeft ? this.playerLeftJumpTexture : this.playerJumpTexture)
+        : playerRunning ? walkTextures[playerFrame] : this.playerIdleTexture;
     if (this.playerNode.material.map !== playerTexture) {
       this.playerNode.material.map = playerTexture;
       this.playerNode.material.needsUpdate = true;
     }
-    // Source PNGs have different transparent margins (all are 1254px square).
-    const footY = !game.player.grounded ? (jumpingLeft ? 1156 : 1155)
-      : playerRunning ? (walkingLeft ? [1153, 1135] : [1121, 1157])[playerFrame] : 1193;
-    this.playerNode.center.set(dedicatedLeft ? .38 : .62, 1 - footY / 1254);
-    const playerScale = this.playerNode.userData.baseScale ?? 1.55;
-    this.playerNode.scale.set(playerScale * (!dedicatedLeft && playerFacing < 0 ? -1 : 1), playerScale, 1);
+    if (this.playerCharacter === 'momose') {
+      const source = MOMOSE_FRAMES[momoseFrameName];
+      const playerHeight = 1.72;
+      this.playerNode.center.set(.5, 0);
+      this.playerNode.scale.set(playerHeight * source.w / source.h, playerHeight, 1);
+    } else {
+      // Source PNGs have different transparent margins (all are 1254px square).
+      const footY = !game.player.grounded ? (jumpingLeft ? 1156 : 1155)
+        : playerRunning ? (walkingLeft ? [1153, 1135] : [1121, 1157])[playerFrame] : 1193;
+      this.playerNode.center.set(dedicatedLeft ? .38 : .62, 1 - footY / 1254);
+      const playerScale = this.playerNode.userData.baseScale ?? 1.55;
+      this.playerNode.scale.set(playerScale * (!dedicatedLeft && playerFacing < 0 ? -1 : 1), playerScale, 1);
+    }
 
     this.playerShadow.visible = Boolean(game.player.grounded);
     if (this.playerShadow.visible) {
@@ -847,6 +887,7 @@ export class ThreePlayRenderer {
     this.playerJumpTexture.dispose();
     this.playerLeftJumpTexture.dispose();
     this.playerIdleTexture.dispose();
+    for (const texture of Object.values(this.momoseTextures ?? {})) texture.dispose();
     for (const material of this.materials.values()) material.dispose();
     for (const geometry of this.geometries.values()) geometry.dispose();
     for (const texture of this.animeTextures) texture.dispose();
