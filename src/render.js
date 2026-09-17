@@ -1,7 +1,7 @@
 import { drawAnimeEnemy, ENEMY_VISUAL_WIDTH_TILES } from './anime-enemies.js?v=20260916-enemy-direction-1';
 import { TILE, PARTS } from './stage.js?v=20260916-enemy-direction-1';
 import { drawBackground } from './backgrounds.js?v=20260916-enemy-direction-1';
-import { MOMOSE_SPRITE_SRC, momoseFrameFor } from './player-characters.js';
+import { JO_FRAMES, JO_SPRITE_SRC, MOMOSE_FRAMES, MOMOSE_SPRITE_SRC, characterFrameFor } from './player-characters.js';
 
 
 const PLAYER_WALK_RIGHT_SOURCES = ['./029A536A-CC50-4049-B511-605245126177.png', './7B1D2CC0-C6BB-4150-83C2-ACAF5D70B983.png'];
@@ -34,6 +34,10 @@ PLAYER_IDLE_FRAME.src = './9914630D-0C2F-469E-B82B-ED918A8EFB35.png';
 const MOMOSE_SPRITE = new Image();
 MOMOSE_SPRITE.decoding = 'async';
 MOMOSE_SPRITE.src = MOMOSE_SPRITE_SRC;
+
+const JO_SPRITE = new Image();
+JO_SPRITE.decoding = 'async';
+JO_SPRITE.src = JO_SPRITE_SRC;
 
 export function drawPart(ctx, type, x, y, size = TILE, time = 0, active = false, props = null) {
   ctx.save();
@@ -319,12 +323,15 @@ function drawVectorPlayer(ctx, p, time) {
 
 export function drawPlayer(ctx, p, time) {
   const selectedCharacter = p.character ?? (typeof localStorage === 'undefined' ? 'dino' : localStorage.getItem('jomaker.playerCharacter')) ?? 'dino';
-  if (selectedCharacter === 'momose' && MOMOSE_SPRITE.complete && MOMOSE_SPRITE.naturalWidth) {
-    const source = momoseFrameFor(p, time);
-    const targetHeight = Math.max(p.h * 1.9, 70);
+  const sheetCharacter = selectedCharacter === 'momose'
+    ? { image: MOMOSE_SPRITE, frames: MOMOSE_FRAMES, minHeight: 70 }
+    : selectedCharacter === 'jo' ? { image: JO_SPRITE, frames: JO_FRAMES, minHeight: 72 } : null;
+  if (sheetCharacter?.image.complete && sheetCharacter.image.naturalWidth) {
+    const source = characterFrameFor(sheetCharacter.frames, p, time);
+    const targetHeight = Math.max(p.h * 1.9, sheetCharacter.minHeight);
     const targetWidth = targetHeight * source.w / source.h;
     ctx.drawImage(
-      MOMOSE_SPRITE,
+      sheetCharacter.image,
       source.x, source.y, source.w, source.h,
       p.x + p.w / 2 - targetWidth / 2, p.y + p.h - targetHeight,
       targetWidth, targetHeight
