@@ -41,21 +41,41 @@ function collectJuracore(game) {
   return collected;
 }
 
+function defeatEnemies(game, defeated) {
+  if (!defeated.size) return;
+  game.enemies = game.enemies.filter(enemy => !defeated.has(enemy));
+  game.stompSerial += defeated.size;
+  game.updateEnemyDoors();
+}
+
 function removePoweredContacts(game) {
   const p = game.player;
   const defeated = new Set();
   for (const enemy of game.enemies ?? []) {
     if (overlaps(p, enemy)) defeated.add(enemy);
   }
-  if (defeated.size) {
-    game.enemies = game.enemies.filter(enemy => !defeated.has(enemy));
-    game.stompSerial += defeated.size;
-    game.updateEnemyDoors();
-  }
+  defeatEnemies(game, defeated);
 
   if (game.projectiles?.length) {
     game.projectiles = game.projectiles.filter(shot => !overlaps(p, shot));
   }
+}
+
+// Trike contact can separate the player before this wrapper regains control:
+// a flipped trike is kicked sideways and a stomp bounces the player upward.
+// State transitions let us recognize those contacts and still treat them as
+// instant defeats while Juracore power is active.
+function removePoweredTrikeInteractions(game, beforeStates) {
+  const defeated = new Set();
+  for (const enemy of game.enemies ?? []) {
+    if (enemy.type !== 'trikeEnemy') continue;
+    const before = beforeStates.get(enemy);
+    if (!before) continue;
+    const stomped = before !== 'flipped' && enemy.state === 'flipped';
+    const kicked = before === 'flipped' && enemy.state === 'sliding';
+    if (stomped || kicked) defeated.add(enemy);
+  }
+  defeatEnemies(game, defeated);
 }
 
 function touchingLethalStageHazard(game) {
@@ -90,6 +110,9 @@ GameEngine.prototype.step = function stepWithJuracore(dt, input) {
 
   const powered = this.juracoreTimer > 0;
   if (powered) removePoweredContacts(this);
+  const trikeStates = powered
+    ? new Map((this.enemies ?? []).filter(e => e.type === 'trikeEnemy').map(e => [e, e.state]))
+    : null;
 
   let blockedDeath = false;
   let result;
@@ -112,7 +135,10 @@ GameEngine.prototype.step = function stepWithJuracore(dt, input) {
     return GameEngine.prototype.die.call(this);
   }
 
-  if (powered) removePoweredContacts(this);
+  if (powered) {
+    removePoweredTrikeInteractions(this, trikeStates);
+    removePoweredContacts(this);
+  }
   collectJuracore(this);
   return result;
 };
