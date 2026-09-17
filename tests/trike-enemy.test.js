@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { GameEngine } from '../src/engine.js?v=20260916-enemy-direction-1';
 import { createStage, StageEditor, StageStore } from '../src/stage.js?v=20260916-enemy-direction-1';
 import { encodeStage, decodeStage } from '../src/share.js?v=20260916-enemy-direction-1';
-import { moveTrike, TRIKE_FLIPPED_DURATION } from '../src/trike-enemy.js?v=20260917-trike-auto-recover-1';
+import { moveTrike, TRIKE_FLIPPED_DURATION } from '../src/trike-enemy.js?v=20260917-trike-double-stomp-1';
 const idle={left:false,right:false,jump:false};
 function setup(extra=[]) {
   const s=createStage();s.objects.push({type:'trikeEnemy',x:8,y:11},...extra);
@@ -44,6 +44,18 @@ test('stomp, kick from either side, stomp sliding and returning side damage',()=
     e.state='sliding';Object.assign(p,{x:e.x+5,y:e.y+e.h-p.h,vy:0});g.step(1/120,idle);
     assert.equal(g.deaths,1);
   }
+});
+test('stomping an already flipped trike defeats it and releases enemy doors',()=>{
+  const g=setup([{type:'enemyDoor',x:15,y:11}]);advance(g,20);
+  const e=g.enemies[0],p=g.player;
+  Object.assign(p,{x:e.x,y:e.y-p.h-1,vy:240});g.step(1/120,idle);
+  assert.equal(e.state,'flipped');
+  assert.ok(g.enemies.includes(e));
+  Object.assign(p,{x:e.x,y:e.y-p.h-1,vy:240});g.step(1/120,idle);
+  assert.ok(!g.enemies.includes(e));
+  assert.equal(g.enemies.length,0);
+  assert.ok(p.vy<0);
+  assert.ok(!g.solids.has('15,11'));
 });
 test('flipped trike gets back up and resumes walking after a short delay',()=>{
   const g=setup();const e=g.enemies[0];
