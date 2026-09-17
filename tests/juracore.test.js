@@ -52,6 +52,24 @@ test('powered player defeats enemies and cancels cannon shots on contact', () =>
   assert.equal(game.projectiles.length, 0);
 });
 
+test('powered player destroys a flipped trike instead of merely kicking it', () => {
+  const game = new GameEngine(stageWithCore([{ type: 'trikeEnemy', x: 5, y: 11, props: { direction: 'left' } }]));
+  placePlayerOn(game, 3, 11);
+  game.step(1 / 120, idle);
+
+  const trike = game.enemies[0];
+  trike.state = 'flipped';
+  trike.flippedTimer = 0;
+  trike.vx = 0;
+  trike.x = game.player.x + game.player.w + 1;
+  trike.y = game.player.y;
+  const deathsBefore = game.deaths;
+  game.step(1 / 120, { left: false, right: true, jump: false });
+
+  assert.equal(game.deaths, deathsBefore);
+  assert.ok(!game.enemies.includes(trike));
+});
+
 test('spikes and pits stay lethal during Juracore power', () => {
   const game = new GameEngine(stageWithCore([{ type: 'spike', x: 6, y: 11 }]));
   placePlayerOn(game, 3, 11);
