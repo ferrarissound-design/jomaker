@@ -1,4 +1,5 @@
 import './engine-fixes.js?v=20260917-trike-mutual-defeat-1';
+import './juracore-runtime.js?v=20260917-juracore-1';
 import './performance-fixes.js?v=20260916-enemy-direction-1';
 import './anime-stage-parts.js?v=20260916-enemy-direction-1';
 import './moving-platform-polish.js?v=20260916-enemy-direction-1';
