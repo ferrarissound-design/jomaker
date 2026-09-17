@@ -70,22 +70,22 @@ test('powered player destroys a flipped trike instead of merely kicking it', () 
   assert.ok(!game.enemies.includes(trike));
 });
 
-test('spikes and pits stay lethal during Juracore power', () => {
+test('spikes are harmless during Juracore power but pits stay lethal', () => {
   const game = new GameEngine(stageWithCore([{ type: 'spike', x: 6, y: 11 }]));
   placePlayerOn(game, 3, 11);
   game.step(1 / 120, idle);
   assert.ok(game.juracoreTimer > 0);
 
+  const deathsBeforeSpike = game.deaths;
   placePlayerOn(game, 6, 11);
   game.step(1 / 120, idle);
-  assert.equal(game.deaths, 1);
-  assert.equal(game.juracoreTimer, 0);
+  assert.equal(game.deaths, deathsBeforeSpike);
+  assert.ok(game.juracoreTimer > 0);
 
-  // Re-arm the power directly so the pit rule can be checked independently.
-  game.juracoreTimer = JURACORE_DURATION;
   game.player.y = game.stage.height * TILE + 101;
   game.step(1 / 120, idle);
-  assert.equal(game.deaths, 2);
+  assert.equal(game.deaths, deathsBeforeSpike + 1);
+  assert.equal(game.juracoreTimer, 0);
 });
 
 test('Juracore power expires normally', () => {
