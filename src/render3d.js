@@ -1,7 +1,7 @@
 import { makeAnimeEnemy, animateAnimeEnemy } from './anime-enemies.js?v=20260916-enemy-direction-1';
 import { TILE, PARTS } from './stage.js?v=20260916-enemy-direction-1';
 import { initAnimeStyle, makeGrassBlock, buildAnimeBackdrop } from './anime-world.js?v=20260916-enemy-direction-1';
-import { MOMOSE_FRAMES, MOMOSE_SPRITE_SRC } from './player-characters.js';
+import { JO_FRAMES, JO_SPRITE_SRC, MOMOSE_FRAMES, MOMOSE_SPRITE_SRC, characterFrameNameFor } from './player-characters.js';
 
 const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
 let threePromise = null;
@@ -87,7 +87,10 @@ export class ThreePlayRenderer {
     this.playerIdleTexture = playerTextureLoader.load('./9914630D-0C2F-469E-B82B-ED918A8EFB35.png', texture => {
       texture.colorSpace = THREE.SRGBColorSpace;
     });
-    this.momoseTextures = this.makeMomoseTextures();
+    this.characterTextures = {
+      momose: this.makeCharacterTextures(MOMOSE_FRAMES, MOMOSE_SPRITE_SRC),
+      jo: this.makeCharacterTextures(JO_FRAMES, JO_SPRITE_SRC)
+    };
     const playerMaterial = new THREE.SpriteMaterial({
       map: this.playerTextures[0],
       transparent: true,
@@ -105,10 +108,10 @@ export class ThreePlayRenderer {
     this.dynamic.add(this.playerShadow);
   }
 
-  makeMomoseTextures() {
+  makeCharacterTextures(frames, spriteSrc) {
     const textures = {};
     const canvases = {};
-    for (const [name, frame] of Object.entries(MOMOSE_FRAMES)) {
+    for (const [name, frame] of Object.entries(frames)) {
       const canvas = document.createElement('canvas');
       canvas.width = frame.w;
       canvas.height = frame.h;
@@ -123,12 +126,12 @@ export class ThreePlayRenderer {
     const sheet = new Image();
     sheet.decoding = 'async';
     sheet.onload = () => {
-      for (const [name, frame] of Object.entries(MOMOSE_FRAMES)) {
+      for (const [name, frame] of Object.entries(frames)) {
         canvases[name].getContext('2d').drawImage(sheet, frame.x, frame.y, frame.w, frame.h, 0, 0, frame.w, frame.h);
         textures[name].needsUpdate = true;
       }
     };
-    sheet.src = MOMOSE_SPRITE_SRC;
+    sheet.src = spriteSrc;
     return textures;
   }
 
@@ -762,18 +765,19 @@ export class ThreePlayRenderer {
     const dedicatedLeft = walkingLeft || jumpingLeft;
     const walkTextures = walkingLeft ? this.playerLeftTextures : this.playerTextures;
     const playerFrame = playerRunning ? Math.floor(time * 8) % 2 : 0;
-    const momoseFrameName = !game.player.grounded ? (jumpingLeft ? 'jumpLeft' : 'jumpRight')
-      : playerRunning ? (walkingLeft ? ['walkLeft1', 'walkLeft2'] : ['walkRight1', 'walkRight2'])[playerFrame] : 'idle';
-    const playerTexture = this.playerCharacter === 'momose' ? this.momoseTextures[momoseFrameName]
+    const characterFrameName = characterFrameNameFor(game.player, time);
+    const sheetFrames = this.playerCharacter === 'momose' ? MOMOSE_FRAMES : this.playerCharacter === 'jo' ? JO_FRAMES : null;
+    const sheetTextures = this.characterTextures?.[this.playerCharacter];
+    const playerTexture = sheetTextures ? sheetTextures[characterFrameName]
       : !game.player.grounded ? (jumpingLeft ? this.playerLeftJumpTexture : this.playerJumpTexture)
         : playerRunning ? walkTextures[playerFrame] : this.playerIdleTexture;
     if (this.playerNode.material.map !== playerTexture) {
       this.playerNode.material.map = playerTexture;
       this.playerNode.material.needsUpdate = true;
     }
-    if (this.playerCharacter === 'momose') {
-      const source = MOMOSE_FRAMES[momoseFrameName];
-      const playerHeight = 1.72;
+    if (sheetFrames) {
+      const source = sheetFrames[characterFrameName];
+      const playerHeight = this.playerCharacter === 'jo' ? 1.76 : 1.72;
       this.playerNode.center.set(.5, 0);
       this.playerNode.scale.set(playerHeight * source.w / source.h, playerHeight, 1);
     } else {
@@ -887,7 +891,9 @@ export class ThreePlayRenderer {
     this.playerJumpTexture.dispose();
     this.playerLeftJumpTexture.dispose();
     this.playerIdleTexture.dispose();
-    for (const texture of Object.values(this.momoseTextures ?? {})) texture.dispose();
+    for (const textures of Object.values(this.characterTextures ?? {})) {
+      for (const texture of Object.values(textures)) texture.dispose();
+    }
     for (const material of this.materials.values()) material.dispose();
     for (const geometry of this.geometries.values()) geometry.dispose();
     for (const texture of this.animeTextures) texture.dispose();

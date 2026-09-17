@@ -57,15 +57,16 @@
 .pause-modal{width:min(90vw,390px)}
 .pause-modal .actions{justify-content:center}
 
-.character-modal{width:min(92vw,520px)}
-.character-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}
+.character-modal{width:min(94vw,650px)}
+.character-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}
 .character-options>button{display:grid;gap:8px;justify-items:center;min-height:178px;padding:12px;background:#eef8f1;border:3px solid #183f4d;box-shadow:0 5px 0 #183f4d}
 .character-options>button[aria-pressed="true"]{background:#fff0b8;box-shadow:0 5px 0 #183f4d,0 0 0 4px #f4bd70 inset}
 .character-options strong{font-size:18px}
 .character-preview{display:block;width:112px;height:120px;background-repeat:no-repeat;background-position:center;background-size:contain}
 .dino-preview{background-image:url('../9914630D-0C2F-469E-B82B-ED918A8EFB35.png')}
 .momose-preview{width:64px;background-size:369px 277px;background-position:-19px -7px}
-@media(max-width:420px){.character-modal{padding:20px}.character-options{gap:9px}.character-options>button{min-height:156px;padding:8px}.character-preview{height:102px}.momose-preview{width:55px;background-size:318px 239px;background-position:-16px -6px}}
+.jo-preview{width:60px;background-size:332px 249px;background-position:-16px -10px}
+@media(max-width:420px){.character-modal{padding:16px}.character-options{gap:7px}.character-options>button{min-height:146px;padding:6px}.character-options strong{font-size:16px}.character-preview{height:96px}.momose-preview{width:52px;background-size:295px 221px;background-position:-15px -5px}.jo-preview{width:48px;background-size:266px 199px;background-position:-13px -8px}}
 
 
 /* Completion polish: recover unfinished work and make save state unmistakable. */
