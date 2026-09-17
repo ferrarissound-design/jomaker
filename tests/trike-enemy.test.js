@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { GameEngine } from '../src/engine.js?v=20260916-enemy-direction-1';
 import { createStage, StageEditor, StageStore } from '../src/stage.js?v=20260916-enemy-direction-1';
 import { encodeStage, decodeStage } from '../src/share.js?v=20260916-enemy-direction-1';
-import { moveTrike } from '../src/trike-enemy.js?v=20260916-enemy-direction-1';
+import { moveTrike, TRIKE_FLIPPED_DURATION } from '../src/trike-enemy.js?v=20260917-trike-auto-recover-1';
 const idle={left:false,right:false,jump:false};
 function setup(extra=[]) {
   const s=createStage();s.objects.push({type:'trikeEnemy',x:8,y:11},...extra);
@@ -44,6 +44,17 @@ test('stomp, kick from either side, stomp sliding and returning side damage',()=
     e.state='sliding';Object.assign(p,{x:e.x+5,y:e.y+e.h-p.h,vy:0});g.step(1/120,idle);
     assert.equal(g.deaths,1);
   }
+});
+test('flipped trike gets back up and resumes walking after a short delay',()=>{
+  const g=setup();const e=g.enemies[0];
+  Object.assign(e,{state:'flipped',flippedTimer:0,vx:0});
+  advance(g,Math.floor(TRIKE_FLIPPED_DURATION*120)-1);
+  assert.equal(e.state,'flipped');
+  const before=e.x;
+  advance(g,2);
+  assert.equal(e.state,'walk');
+  assert.notEqual(e.x,before);
+  assert.equal(e.flippedTimer,0);
 });
 for(const type of ['enemy','flyingEnemy','trikeEnemy'])test(`sliding defeats ${type} regardless of ordering`,()=>{
   for(const reversed of [false,true]) {
