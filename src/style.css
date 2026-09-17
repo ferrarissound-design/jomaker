@@ -58,7 +58,7 @@
 .pause-modal .actions{justify-content:center}
 
 .character-modal{width:min(94vw,650px)}
-.character-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}
+.character-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}
 .character-options>button{display:grid;gap:8px;justify-items:center;min-height:178px;padding:12px;background:#eef8f1;border:3px solid #183f4d;box-shadow:0 5px 0 #183f4d}
 .character-options>button[aria-pressed="true"]{background:#fff0b8;box-shadow:0 5px 0 #183f4d,0 0 0 4px #f4bd70 inset}
 .character-options strong{font-size:18px}
@@ -85,3 +85,7 @@
 .record-title{font-weight:700;color:#286345}
 .clear-badges,.record-summary{font-size:12px;line-height:1.6}
 @media(orientation:landscape) and (max-height:520px){.clear-overlay .modal{padding:16px}.clear-overlay h2{margin:6px 0}.clear-stats{grid-template-columns:repeat(4,minmax(0,1fr))}.clear-stats strong{font-size:17px}.clear-overlay p{margin:8px 0}}
+
+.toa-preview{width:60px;background-size:333.51px 250.13px;background-position:-8.98px -4.84px}
+@media(max-width:420px){.toa-preview{width:48px;background-size:266.81px 200.11px;background-position:-7.19px -3.87px}}
+.character-modal{max-height:90dvh;overflow-y:auto}
