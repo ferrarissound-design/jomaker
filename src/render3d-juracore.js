@@ -43,7 +43,17 @@ function decorateJuracoreEntries(renderer) {
       motes.push(mote);
     }
 
-    group.userData.juracore = { core, center, motes, coreGeometry, coreMaterial, centerMaterial, moteGeometry, moteMaterial };
+    group.userData.juracore = {
+      core,
+      center,
+      motes,
+      baseY: group.position.y,
+      coreGeometry,
+      coreMaterial,
+      centerMaterial,
+      moteGeometry,
+      moteMaterial
+    };
   }
 }
 
@@ -96,7 +106,7 @@ function installJuracoreVisuals(renderer) {
     for (const entry of renderer.staticEntries) {
       const data = entry.node.userData.juracore;
       if (!data || !entry.node.visible) continue;
-      entry.node.position.y += Math.sin(time * 3.2 + entry.o.x * .17) * .045;
+      entry.node.position.y = data.baseY + Math.sin(time * 3.2 + entry.o.x * .17) * .045;
       data.core.rotation.x = time * .7;
       data.core.rotation.y = time * 1.3;
       const pulse = 1 + Math.sin(time * 5.2) * .07;
